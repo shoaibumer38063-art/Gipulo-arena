@@ -30,6 +30,12 @@ numbers are per fixture, not a single multiplier. Index query time is still abov
 hover budget on this dense fixture; leaf-bound tightening or cursor-radius pruning is the next step
 if measured need persists.
 
+## Follow-up tuning (task 016)
+
+Leaf size swept on the same dense fixture: 8 → 1.08 ms, 4 → 0.73 ms, 2 → 0.60 ms per query;
+checksums identical. Leaf size set to 2. Remaining cost is per-segment Bézier search; next lever
+would be cheaper per-segment rejection, only if measured need persists.
+
 ## Process notes
 
 - The first sweep test took 94 s in debug mode because the brute-force oracle ran on 200 segments

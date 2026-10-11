@@ -29,7 +29,7 @@ Refines:    vector-engine.md §8.2 (spatial index — ADR-gated), §9 (index vs 
 
 | # | Sub-decision | Choice | Rationale |
 |---|---|---|---|
-| 1 | Structure | Static BVH, median split on the longer centroid axis, leaves of ≤ 8 segments | No tuning constant; robust to uneven density; ~100 lines |
+| 1 | Structure | Static BVH, median split on the longer centroid axis, leaves of ≤ 2 segments (measured: 0.60 ms/query at 2 vs 1.08 ms at 8; results identical) | No tuning constant; robust to uneven density; ~100 lines |
 | 2 | Bounds | Tight bounds per segment (from `Cubic::tight_bounds`) | Tight boxes prune far better than control-hull boxes; the curve lies inside them, so pruning is safe |
 | 3 | Scope | One index per path | Matches the edit unit (one path is edited at a time) and keeps rebuild cost local |
 | 4 | Update | Rebuild the affected path's index at commit (ADR-004 #12 publishes the affected ids); never per frame | Cost is O(n log n) on the edited path only; measured below |
@@ -60,6 +60,8 @@ Refines:    vector-engine.md §8.2 (spatial index — ADR-gated), §9 (index vs 
 
 - Build: 0.27 ms. Index equals brute force exactly (max distance difference 0).
 - Brute force: 142 ms per query on this fixture. Index: 1.13 ms per query.
+- Tuning (task 016): leaf size sweep on the same fixture: 8 → 1.08 ms, 4 → 0.73 ms, 2 → 0.60 ms per query,
+  checksums identical. Leaf size 2 adopted.
 - CAVEAT: the task-010 baseline (10.4 ms) came from a different fixture. Figures are per fixture,
   not a single multiplier. Dense, densely overlapping segments (3 units apart, sinusoidal) still
   visit many leaves; 1.1 ms is above a comfortable hover budget. Next optimization, if measured

@@ -198,6 +198,10 @@ must be logged here with date, what changed, and why.
   ADRs (process: `rules/documentation.md` D7). No memory distillation files changed content;
   `08_foundation_roadmap.md` status and the master beacon §6 updated to reflect step 1 complete.
 
+## 2026-10-11 — Task 016: hover index tuning
+
+- Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
+
 ## 2026-10-11 — Task 015: RVS affordance language (ADR-005)
 
 - **What:** ADR-005 ACCEPTED under the owner's delegation: eligible segments = magenta (guide/spacing) + dot; activated = success green + count pill; context = blue dashed; red stays rulers-only. Closes the 08 §8 pending item.

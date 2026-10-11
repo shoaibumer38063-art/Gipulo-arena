@@ -9,8 +9,8 @@ use crate::cubic::Cubic;
 use crate::hit::Nearest;
 use crate::segments::{segment_count, segment_cubic};
 
-/// Maximum segments per leaf (ADR-007 #1).
-const LEAF_SIZE: usize = 8;
+/// Maximum segments per leaf (ADR-007 #1). Measured: 2 gives 0.60 ms/query vs 1.08 ms at 8 (dense 1000-seg fixture).
+const LEAF_SIZE: usize = 2;
 
 #[derive(Debug, Clone, Copy)]
 struct Item {
