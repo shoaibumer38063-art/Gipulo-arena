@@ -202,6 +202,12 @@ must be logged here with date, what changed, and why.
 
 - Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
 
+## 2026-10-11 — Task 020: editor Slice 0 plan (no code)
+
+- **What:** plan with 28 testable acceptance criteria, the canvas-rule checklist, deliberate deferrals (handles, snapping, text), and four blocking decisions (D1 bootstrap painter, D2 interaction state machine home, D3 boundary protocol shape, D4 multi-select and Delete in Slice 0).
+- **Verified state:** the core has document, history, coordinates, and geometry; the scene and renderer are vocabulary-only; the boundary is version-only. Slice 0 must add the boundary, a draw list, the state machine, and a canvas host.
+- **Honest scope note:** the plan lists the canvas rules read and the ones still to read before the build.
+
 ## 2026-10-11 — Task 019: shell ↔ engine wiring + browser E2E
 
 - **What:** the shell loads the Wasm core (`loadEngine()` in `app/src/engine/client.ts`), runs the protocol handshake, and shows a status line (`Engine ready · protocol 0`). No editor features.
