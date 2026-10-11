@@ -1,0 +1,10 @@
+# Gipulo toolchain pin (applies to `cargo` commands anywhere in this repository).
+#
+# ADR-001 (ACCEPTED — Option B): the engine core is Rust compiled to WebAssembly.
+# wasm32-unknown-unknown is the required target; rustfmt + clippy are required components
+# because CI enforces formatting and lints (docs/architecture/ADR-001-technology-stack.md,
+# engine-core.md §9–10).
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
