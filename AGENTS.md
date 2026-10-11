@@ -93,3 +93,10 @@ gipulo/
 - Never edit `docs/source/` files. If a source document is superseded by a newer user document,
   add the new document to `docs/source/` and note the supersession in the memory index + changelog.
 - If distilled memory and a source document ever conflict, fix the distilled memory.
+
+## GitHub sync (end of every task)
+
+After each completed task, run `scripts/sync-github.sh "<short task message>"` from the repo root.
+It commits everything and pushes to `origin/main`. Credentials come only from the `GITHUB_TOKEN`
+environment variable and are never written to any file. Exit code 2 means the push was skipped
+(no token): the commit is still made locally, and the owner must be told.
