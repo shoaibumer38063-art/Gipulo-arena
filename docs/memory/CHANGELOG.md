@@ -205,7 +205,7 @@ must be logged here with date, what changed, and why.
 ## 2026-10-11 — Task 019: shell ↔ engine wiring + browser E2E
 
 - **What:** the shell loads the Wasm core (`loadEngine()` in `app/src/engine/client.ts`), runs the protocol handshake, and shows a status line (`Engine ready · protocol 0`). No editor features.
-- **Tests:** Playwright smoke test (`app/e2e/engine-smoke.spec.ts`) against the production build: passes. Vitest 47/47, typecheck, production build all green.
+- **Tests:** Playwright tests against the production build: handshake success (`engine-smoke.spec.ts`) and engine-load failure shows the error state (`engine-error.spec.ts`): both pass. Vitest 47/47, typecheck, production build all green.
 - **CI:** the shell job now builds the bindings first (the shell imports them) and runs the browser E2E.
 - **Dependency:** `@playwright/test` (dev only) registered in `dependencies.md`.
 
