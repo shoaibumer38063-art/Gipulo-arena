@@ -1,0 +1,337 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Gipulo — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg-canvas:#f5f5f5;--bg-panel:#fff;--bg-input:#f5f5f5;--bg-hover:rgba(0,0,0,.06);--bg-sel:#e5f4ff;--bd:rgba(0,0,0,.1);--bd2:rgba(0,0,0,.22);--t1:rgba(0,0,0,.9);--t2:rgba(0,0,0,.5);--t3:rgba(0,0,0,.3);--accent:#0d99ff;--accent-hi:#2aa7ff;--accent-lo:#0b82dc;--danger:#f24822;--ok:#14ae5c;--warn:#ffb800;--g-geo:#0d99ff;--g-space:#ec2fd0;--g-snap:#ff8a00;--g-ruler:#f24822;--comp:#9747ff;--sel:rgba(13,153,255,.3);--menu:#fff;--menu-t:rgba(0,0,0,.9);--menu-sep:rgba(0,0,0,.1);--menu-bd:rgba(0,0,0,.08);--menu-sh:var(--shadow);--tip:#1e1e1e;--tb:#2c2c2c;--frame:#fff;--shadow:0 0 .5px rgba(0,0,0,.3),0 10px 16px rgba(0,0,0,.12),0 2px 5px rgba(0,0,0,.15);--ease:cubic-bezier(.2,0,0,1);--fast:80ms}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg-canvas:#1e1e1e;--bg-panel:#2c2c2c;--bg-input:#383838;--bg-hover:rgba(255,255,255,.1);--bg-sel:#0a3a5e;--bd:rgba(255,255,255,.1);--bd2:rgba(255,255,255,.25);--t1:rgba(255,255,255,.9);--t2:rgba(255,255,255,.55);--t3:rgba(255,255,255,.3);--frame:#2c2c2c;--menu:#1e1e1e;--menu-t:#fff;--menu-sep:rgba(255,255,255,.14);--menu-bd:rgba(255,255,255,.12);--menu-sh:0 0 .5px #000,0 10px 16px rgba(0,0,0,.4),0 2px 5px rgba(0,0,0,.5)}}
+:root[data-theme=dark]{--bg-canvas:#1e1e1e;--bg-panel:#2c2c2c;--bg-input:#383838;--bg-hover:rgba(255,255,255,.1);--bg-sel:#0a3a5e;--bd:rgba(255,255,255,.1);--bd2:rgba(255,255,255,.25);--t1:rgba(255,255,255,.9);--t2:rgba(255,255,255,.55);--t3:rgba(255,255,255,.3);--frame:#2c2c2c;--menu:#1e1e1e;--menu-t:#fff;--menu-sep:rgba(255,255,255,.14);--menu-bd:rgba(255,255,255,.12);--menu-sh:0 0 .5px #000,0 10px 16px rgba(0,0,0,.4),0 2px 5px rgba(0,0,0,.5)}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg-canvas);color:var(--t1);font:450 11px/16px Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+::selection{background:var(--sel);color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:5px;border:3px solid transparent;background-clip:content-box}
+button{font:inherit;color:inherit;cursor:default}i{display:inline-flex;font-style:normal}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;display:block}
+#app{display:grid;grid-template:40px minmax(0,1fr)/240px minmax(0,1fr) 240px;height:100%}
+header{grid-column:1/-1;background:var(--tb);color:#fff;display:flex;align-items:center;padding:0 8px;gap:2px}
+.logo{width:24px;height:24px;border-radius:6px;background:conic-gradient(from 200deg,#0d99ff,#9747ff,#ec2fd0,#0d99ff);margin:0 10px 0 4px}
+.tool{width:32px;height:32px;display:grid;place-items:center;border:0;background:none;border-radius:5px;color:#fff;transition:background var(--fast)}.tool:hover{background:rgba(255,255,255,.12)}.tool.on{background:var(--accent)}
+.sep{width:1px;height:16px;background:rgba(255,255,255,.2);margin:0 6px}.sp{flex:1}
+.fname{opacity:.9;font-weight:500}.fname span{opacity:.5;font-weight:450}
+.share{height:24px;padding:0 10px;border-radius:5px;border:0;color:#fff;font-weight:500;margin-left:8px;background:linear-gradient(180deg,var(--accent-hi),var(--accent-lo));box-shadow:inset 0 0 0 .5px rgba(255,255,255,.35)}
+.panel{background:var(--bg-panel);overflow:auto;min-width:0}.pl{border-right:1px solid var(--bd)}.pr{border-left:1px solid var(--bd)}
+.tabs{display:flex;gap:16px;padding:0 16px;height:40px;align-items:center;border-bottom:1px solid var(--bd);color:var(--t2);font-weight:500}.tabs .on{color:var(--t1)}
+.sh{padding:12px 16px 4px;font-weight:600}
+.lr{display:flex;align-items:center;gap:4px;height:28px;padding:0 8px 0 calc(8px + var(--d,0)*16px);position:relative;transition:background var(--fast)}
+.lr .ic{color:var(--t2)}.lr .ch{width:16px;opacity:.6}.lr .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr .cap{margin-left:auto}.ac{display:flex;gap:2px;opacity:0;color:var(--t2)}
+.lr:hover,.lr.hv{background:var(--bg-hover)}.lr:hover .ac{opacity:1}.lr.sel{background:var(--bg-sel)}
+.lr.hid{opacity:.45}.lr.cmp .ic,.lr.cmp .nm{color:var(--comp)}.lr.err .nm{color:var(--danger)}.lr.err .ic{color:var(--danger)}
+.lr.ren .nm{flex:none;width:120px;outline:1px solid var(--accent);border-radius:2px;padding:0 4px;background:var(--bg-panel)}
+.lr.drag{opacity:.7;box-shadow:var(--shadow);background:var(--bg-panel)}.lr.into{box-shadow:inset 0 0 0 1.5px var(--accent);background:var(--bg-sel)}
+.ins{height:0;position:relative;margin:0 8px 0 calc(8px + var(--d,0)*16px)}.ins:before{content:"";position:absolute;left:0;right:0;top:-1px;height:2px;background:var(--accent);border-radius:1px}.ins:after{content:"";position:absolute;left:-3px;top:-4px;width:6px;height:6px;border:1.5px solid var(--accent);border-radius:50%;background:var(--bg-panel)}
+.cv{overflow:auto;position:relative;padding:48px;display:flex;flex-wrap:wrap;gap:56px 48px;align-content:flex-start}
+.fr{flex:none}.ft{display:flex;gap:4px;align-items:center;height:20px;color:var(--t2);padding-bottom:4px}.fr.sel .ft{color:var(--accent)}
+.fb{position:relative;background:var(--frame);padding:16px;display:flex;flex-direction:column;gap:12px}.fr:hover .fb,.fr.sel .fb{outline:1px solid var(--accent)}
+.hd{position:absolute;width:8px;height:8px;background:#fff;border:1px solid var(--accent);transform:translate(-50%,-50%);z-index:3}
+.pill{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;background:var(--accent);color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:3}
+h6{margin:0;font-size:11px;font-weight:600}.cap{color:var(--t3);font-size:10px}code{font:500 10px/14px 'JetBrains Mono',ui-monospace,monospace;color:var(--t2)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 8px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 10px}
+.chip{height:40px;border-radius:5px;box-shadow:0 0 0 1px var(--bd)}.sw div:nth-child(2){margin-top:4px;font-size:10px}
+.tr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--bd)}.el{width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx{display:grid;grid-template-columns:56px repeat(5,1fr);gap:8px;align-items:center}
+.btn{height:24px;min-width:64px;padding:0 10px;border-radius:5px;border:1px solid transparent;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:background var(--fast),box-shadow var(--fast)}
+.btn.p{color:#fff;background:linear-gradient(180deg,var(--accent-hi),var(--accent-lo));box-shadow:inset 0 0 0 .5px rgba(255,255,255,.35),0 1px 1px rgba(0,0,0,.15)}
+.btn.p:hover,.btn.p.h{background:linear-gradient(180deg,#4db8ff,var(--accent))}.btn.p:active,.btn.p.a{background:var(--accent-lo);box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.btn.s{background:var(--bg-panel);border-color:var(--bd2)}.btn.s:hover,.btn.s.h{background:var(--bg-hover)}.btn.s:active,.btn.s.a{background:var(--bd);box-shadow:inset 0 1px 1px rgba(0,0,0,.12)}
+.btn.g,.btn.i{background:none}.btn.g:hover,.btn.g.h,.btn.i:hover,.btn.i.h{background:var(--bg-hover)}.btn.g:active,.btn.g.a,.btn.i:active,.btn.i.a{background:var(--bd)}
+.btn.i{min-width:0;width:24px;padding:0}.btn.f{box-shadow:0 0 0 2px var(--bg-panel),0 0 0 4px var(--accent)}.btn:disabled{opacity:.4}
+.fl{display:flex;align-items:center;height:28px;background:var(--bg-input);border:1px solid transparent;border-radius:5px;transition:border-color var(--fast)}
+.fl:hover,.fl.hv{border-color:var(--bd2)}.fl:focus-within,.fl.fo{border-color:var(--accent);box-shadow:inset 0 0 0 .5px var(--accent)}.fl.inv{border-color:var(--danger)}.fl.dis{opacity:.4}
+.fl b{width:26px;text-align:center;color:var(--t2);font-weight:500;cursor:ew-resize;flex:none}.fl input{all:unset;flex:1;min-width:0;padding-right:8px;font-variant-numeric:tabular-nums}.fl input::placeholder{color:var(--t1)}
+.sg{display:flex;background:var(--bg-input);border-radius:5px;padding:2px;gap:2px;width:fit-content}.sg span{padding:0 10px;height:22px;display:grid;place-items:center;border-radius:3px;color:var(--t2)}.sg span.on{background:var(--bg-panel);color:var(--t1);box-shadow:0 0 0 .5px var(--bd2),0 1px 2px rgba(0,0,0,.12)}
+.tg{width:28px;height:16px;border-radius:8px;background:var(--bd2);position:relative;transition:background var(--fast)}.tg:after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.2);transition:transform 120ms var(--ease)}.tg.on{background:var(--accent)}.tg.on:after{transform:translateX(12px)}
+.cb{width:16px;height:16px;border:1px solid var(--bd2);border-radius:3px;display:grid;place-items:center;color:#fff}.cb.on{background:var(--accent);border-color:var(--accent)}.cb .ic{width:12px;height:12px;stroke-width:1.75;opacity:0}.cb.on .ic{opacity:1}
+.rd{width:16px;height:16px;border:1px solid var(--bd2);border-radius:50%}.rd.on{border:5px solid var(--accent)}
+.sl{width:140px;height:16px;position:relative}.sl:before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;border-radius:1px;background:linear-gradient(90deg,var(--accent) var(--v),var(--bd2) var(--v))}.sl i{position:absolute;left:var(--v);top:2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#fff;box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 1px 3px rgba(0,0,0,.3)}
+.menu{width:224px;background:var(--menu);color:var(--menu-t);border:1px solid var(--menu-bd);border-radius:13px;padding:8px;box-shadow:var(--menu-sh)}
+.mi{display:flex;align-items:center;height:24px;padding:0 8px 0 24px;border-radius:5px;position:relative}.mi:hover,.mi.h{background:var(--accent);color:#fff}.mi .k{margin-left:auto;opacity:.5}.mi.on:before{content:"✓";position:absolute;left:8px}.mi.dis{opacity:.4}.mi.del{color:var(--danger)}.mi.del:hover,.mi.del.h{background:var(--danger);color:#fff}.ms{height:1px;background:var(--menu-sep);margin:4px -8px}
+.tt{background:var(--tip);color:#fff;border-radius:5px;padding:5px 8px;display:inline-flex;gap:8px;width:fit-content}.tt em{font-style:normal;opacity:.5}
+.toast{background:var(--tip);color:#fff;border-radius:8px;padding:8px 12px;display:inline-flex;gap:8px;align-items:center;box-shadow:var(--shadow);width:fit-content}
+.cp{height:20px;padding:0 8px;border-radius:10px;background:var(--bg-input);display:inline-flex;align-items:center;gap:4px}.cp.a{background:var(--bg-sel);color:var(--accent)}.cp.e{background:#fde8e3;color:var(--danger)}
+svg text{font:500 10px Inter,system-ui,sans-serif}.gl{fill:none;stroke:var(--g-geo)}.hs{fill:#fff;stroke:var(--g-geo)}
+.pn{padding:12px 16px;font-weight:600;display:flex;gap:8px;align-items:center}.sec{padding:8px 16px 12px;border-top:1px solid var(--bd)}.sec>h6{padding:4px 0 8px}
+.fillrow{display:flex;align-items:center;gap:8px}.sw16{width:16px;height:16px;border-radius:3px;box-shadow:0 0 0 1px var(--bd)}.tok{display:flex;justify-content:space-between;height:24px;align-items:center;color:var(--t2)}.tok code{color:var(--t1)}
+.tl svg{width:100%;display:block;background:var(--bg-canvas);border-radius:3px}.tl .cap{margin-top:3px;color:var(--t1);font-size:11px}.tl code{display:block;font-size:9px;line-height:12px}
+.ig{position:absolute;top:0;bottom:0;width:1px;background:var(--bd);pointer-events:none}.lr .nm{min-width:0}.lr.hv .ac,.lr.lk .ac,.lr.hid .ac{opacity:1}.lr.lk .ac i:nth-child(2),.lr.hid .ac i:first-child{display:none}.lr.kid{background:rgba(13,153,255,.08)}.lr.kid.hv{background:rgba(13,153,255,.18)}
+@media(max-width:900px){#app{grid-template-columns:minmax(0,1fr)}.pl,.pr{display:none}.tool:nth-child(n+5){display:none}.cv{padding:24px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-move" viewBox="0 0 16 16"><path d="M3.5 2.5l9 4.5-3.8 1.2L6.7 12z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-frame" viewBox="0 0 16 16"><path d="M5 2v12M11 2v12M2 5h12M2 11h12"/></symbol>
+<symbol id="i-rect" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1"/></symbol>
+<symbol id="i-pen" viewBox="0 0 16 16"><path d="M3 13l1-3.5 7-7 2.5 2.5-7 7z"/></symbol>
+<symbol id="i-text" viewBox="0 0 16 16"><path d="M3 3.5h10M8 3.5v9.5M6 13h4"/></symbol>
+<symbol id="i-hand" viewBox="0 0 16 16"><path d="M4 9V5.5M6.5 8V3.5M9 8V4.5M11.5 9V6.5M4 9c0 3 2 5 4 5s3.500-1.500 3.500-4.500"/></symbol>
+<symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.5 8s2.300-4.500 6.500-4.500S14.500 8 14.500 8 12.200 12.500 8 12.500 1.500 8 1.500 8z"/><circle cx="8" cy="8" r="2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.500" y="7" width="9" height="6.500" rx="1"/><path d="M5.500 7V5a2.500 2.500 0 0 1 5 0v2"/></symbol>
+<symbol id="i-chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></symbol>
+<symbol id="i-check" viewBox="0 0 16 16"><path d="M3.500 8.500l3 3 6-6.500"/></symbol>
+<symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></symbol>
+<symbol id="i-comp" viewBox="0 0 16 16"><path d="M8 1.500l3 3-3 3-3-3zM4.500 5l3 3-3 3-3-3zM11.500 5l3 3-3 3-3-3zM8 8.500l3 3-3 3-3-3z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-inst" viewBox="0 0 16 16"><path d="M8 2.500l5.500 5.500-5.500 5.500L2.500 8z"/></symbol>
+</defs></svg>
+<div id="app">
+<header><div class="logo"></div>
+<button class="tool on" aria-label="Move"><i data-i="move"></i></button><button class="tool" aria-label="Frame"><i data-i="frame"></i></button><button class="tool" aria-label="Rectangle"><i data-i="rect"></i></button><button class="tool" aria-label="Pen"><i data-i="pen"></i></button><button class="tool" aria-label="Text"><i data-i="text"></i></button><button class="tool" aria-label="Hand"><i data-i="hand"></i></button>
+<span class="sp"></span><span class="fname"><span>Gipulo /</span> Design system</span><span class="sp"></span>
+<button class="tool" id="th" aria-label="Toggle theme" style="font-size:13px">◐</button><span style="opacity:.6;margin:0 8px">100%</span><button class="share">Share</button></header>
+
+<aside class="panel pl"><div class="tabs"><span class="on">Layers</span><span>Assets</span></div>
+<div class="sh">Pages</div><div class="lr sel"><span style="width:16px">✓</span>Design system</div><div class="lr"><span style="width:16px"></span>Cursors</div><div class="lr"><span style="width:16px"></span>Prototypes</div>
+<div class="sh" style="border-top:1px solid var(--bd);margin-top:8px">Layers</div><div id="ly"></div></aside>
+
+<main class="cv" id="cv">
+<div class="fr" data-n="Color tokens" style="width:400px" data-tok="bg/canvas:--bg-canvas|accent/default:--accent|guide/spacing:--g-space"><div class="fb"><h6>Color tokens</h6><div class="g4" id="sws"></div><span class="cap">Neutral UI · accent reserved for primary actions, selection and focus</span></div></div>
+
+<div class="fr" data-n="Typography" style="width:380px" data-tok="font/ui:Inter|font/mono:JetBrains Mono|size/body:11/16"><div class="fb" style="gap:0"><h6 style="margin-bottom:6px">Typography</h6>
+<div class="tr"><span style="font:600 13px/20px Inter">Design system</span><code>Title 13/20 · 600</code></div>
+<div class="tr"><span>Property label and value</span><code>Body 11/16 · 450</code></div>
+<div class="tr"><span style="font-size:10px;font-weight:500;letter-spacing:.02em">Section caption</span><code>Caption 10/16 · 500</code></div>
+<div class="tr"><code style="font-size:11px;color:var(--t1)">X 128.00 · Y 64.00</code><code>Mono tabular</code></div>
+<div class="tr"><span class="el">A very long layer name that truncates</span><code>1 line + …</code></div></div></div>
+
+<div class="fr" data-n="Buttons — states" style="width:520px" data-tok="control/height:24px|radius/m:5px|motion/hover:80ms"><div class="fb"><h6>Buttons</h6><div class="mx" id="mx"></div><span class="cap">Gradient is reserved for the one primary action in a view</span></div></div>
+
+<div class="fr" data-n="Menu · tooltip · toast" style="width:260px" data-tok="menu/bg:--menu (themed)|radius/l:13px|menu/item:24px"><div class="fb">
+<div class="menu"><div class="mi">Copy<span class="k">⌘C</span></div><div class="mi h">Paste here<span class="k">⌘⇧V</span></div><div class="ms"></div><div class="mi on">Show rulers<span class="k">⇧R</span></div><div class="mi">Bring to front<span class="k">⌘]</span></div><div class="mi dis">Ungroup<span class="k">⌘⇧G</span></div><div class="mi">Plugins<span class="k">›</span></div><div class="ms"></div><div class="mi del">Delete<span class="k">⌫</span></div></div>
+<span class="tt">Rectangle <em>R</em></span><span class="toast"><i data-i="check"></i>Published</span><div class="row"><span class="cp a">Selected</span><span class="cp">Default</span><span class="cp e">Error</span></div></div></div>
+
+<div class="fr" data-n="Fields &amp; controls" style="width:480px" data-tok="field/bg:--bg-input|border/focus:--accent|control/height:28px"><div class="fb"><h6>Property fields</h6>
+<div class="g3"><div><div class="fl"><b>X</b><input value="128"></div><span class="cap">Default</span></div><div><div class="fl hv"><b>W</b><input value="240"></div><span class="cap">Hover</span></div><div><div class="fl fo"><b>Y</b><input value="64"></div><span class="cap">Focus</span></div>
+<div><div class="fl"><b>R</b><input placeholder="Mixed"></div><span class="cap">Mixed</span></div><div><div class="fl inv"><b>H</b><input value="abc"></div><span class="cap">Invalid</span></div><div><div class="fl dis"><b>Z</b><input value="0"></div><span class="cap">Disabled</span></div></div>
+<h6>Controls</h6><div class="row" style="gap:14px"><span class="tg on"></span><span class="tg"></span><span class="cb on"><i data-i="check"></i></span><span class="cb"><i data-i="check"></i></span><span class="rd on"></span><span class="rd"></span><div class="sl" style="--v:60%"><i></i></div></div>
+<div class="sg"><span class="on">Fill</span><span>Hug</span><span>Fixed</span></div></div></div>
+
+<div class="fr" data-n="Layer rows" style="width:300px" data-tok="row/height:28px|row/indent:16px|selected:--bg-sel"><div class="fb" style="padding:8px 0;gap:0">
+<div class="lr"><i class="ch" data-i="chev" style="transform:rotate(90deg)"></i><i data-i="frame"></i><span class="nm">Card</span><span class="cap">default</span></div>
+<div class="lr hv" style="--d:1"><i class="ch"></i><i data-i="rect"></i><span class="nm">Image</span><span class="cap">hover</span></div>
+<div class="lr sel" style="--d:1"><i class="ch"></i><i data-i="text"></i><span class="nm">Title</span><span class="cap">selected</span></div>
+<div class="lr sel" style="--d:1"><i class="ch"></i><i data-i="pen"></i><span class="nm">Icon</span><span class="cap">multi-select</span></div>
+<div class="lr ren" style="--d:1"><i class="ch"></i><i data-i="rect"></i><span class="nm">Renaming</span></div>
+<div class="lr hid" style="--d:1"><i class="ch"></i><i data-i="rect"></i><span class="nm">Hidden</span><i data-i="eye"></i></div>
+<div class="lr" style="--d:1"><i class="ch"></i><i data-i="rect"></i><span class="nm">Locked</span><i data-i="lock"></i></div>
+<div class="lr cmp"><i class="ch"></i><i data-i="comp"></i><span class="nm">Button / Primary</span><span class="cap">component</span></div>
+<div class="lr cmp"><i class="ch"></i><i data-i="inst"></i><span class="nm">Button / Primary</span><span class="cap">instance</span></div>
+<div class="lr err"><i class="ch"></i><i data-i="text"></i><span class="nm">Missing font</span></div>
+<div class="lr drag"><i class="ch"></i><i data-i="rect"></i><span class="nm">Dragging</span></div><div class="ins" style="--d:1"></div><div class="lr" style="--d:1"><i class="ch"></i><i data-i="rect"></i><span class="nm">Insert between</span></div>
+<div class="lr into"><i class="ch"></i><i data-i="frame"></i><span class="nm">Drop inside frame</span></div></div></div>
+
+<div class="fr" data-n="Layer panel — deep nesting" style="width:340px" data-tok="indent:16px, max 8 levels|row/height:28px|guide line:--bd 1px"><div class="fb" style="padding:8px 0 12px;gap:8px"><div style="padding:0 16px"><h6>Deep nesting · hover</h6><code>Hover: row bg + lock and eye appear on that row only (80ms)<br>Selected parent: descendants tinted 8%, hovered descendant 18%<br>Indent 16px per level, 8px beyond level 8 · name truncates with …<br>Locked / hidden rows keep their icon visible without hover</code></div><div id="deep" style="max-height:560px;overflow:auto;position:relative"></div></div></div>
+<div class="fr" data-n="Canvas overlays" style="width:580px" data-tok="guide/geometry:--g-geo|guide/spacing:--g-space|guide/snap:--g-snap"><div class="fb"><h6>Canvas overlays</h6>
+<svg viewBox="0 0 548 290" width="100%" style="display:block;background:var(--bg-canvas)">
+<rect x="24" y="36" width="180" height="108" fill="#d9d9d9"/><rect x="264" y="36" width="100" height="108" fill="#d9d9d9"/><rect x="24" y="200" width="180" height="60" fill="#d9d9d9"/>
+<rect x="264.500" y="36.500" width="100" height="108" class="gl"/>
+<rect x="204" y="36" width="60" height="108" fill="var(--g-space)" opacity=".14"/><path d="M204 90h60M204 84v12M264 84v12" stroke="var(--g-space)" fill="none"/><rect x="223" y="83" width="22" height="14" rx="3" fill="var(--g-space)"/><text x="234" y="93" fill="#fff" text-anchor="middle">60</text>
+<path d="M24.500 30v236" stroke="var(--g-snap)" fill="none" stroke-dasharray="4 3"/><path d="M21 33l6 6m0-6l-6 6M21 261l6 6m0-6l-6 6" stroke="var(--g-snap)"/>
+<rect x="24.500" y="36.500" width="180" height="108" class="gl"/><g id="hs"></g><circle cx="38" cy="50" r="3" class="hs"/>
+<rect x="84" y="152" width="60" height="16" rx="3" fill="var(--g-geo)"/><text x="114" y="163" fill="#fff" text-anchor="middle">180 × 108</text>
+<path d="M404 170C420 70 490 70 516 170" class="gl" stroke-width="1.500"/><path d="M404 170L420 70M516 170L490 70" class="gl" stroke-width=".75"/><circle cx="420" cy="70" r="3" class="hs"/><circle cx="490" cy="70" r="3" class="hs"/><circle cx="456" cy="95" r="2.500" fill="var(--g-geo)" opacity=".5"/><rect x="401" y="167" width="6" height="6" class="hs"/><rect x="513" y="167" width="6" height="6" fill="var(--g-geo)"/>
+</svg>
+<div class="row" style="gap:14px"><span class="row" style="gap:4px"><i class="sw16" style="background:var(--g-geo)"></i>Geometry: selection, paths</span><span class="row" style="gap:4px"><i class="sw16" style="background:var(--g-space)"></i>Spacing: distance, padding</span><span class="row" style="gap:4px"><i class="sw16" style="background:var(--g-snap)"></i>Snap: alignment</span></div>
+<span class="cap">1px at every zoom · handles 8px with 16px hit area · labels 10/16, radius 3 · snap dashed 4 3</span></div></div>
+
+<div class="fr" data-n="Guides — Geometry" style="width:580px" data-tok="color:--g-geo|stroke:1px|handles:7px"><div class="fb"><h6>Geometry guides · blue</h6><code>--g-geo · 1px · handles 7px white with 1px stroke · pill r3, 10/16<br>Modes: object · frame/group · vector edit · text edit · text on path<br>Hover 60% · selected 100% · parent context 40% dashed</code><div class="g4 tl" data-g="G"></div><span class="cap">Zoom: stroke, handles and labels stay constant on screen. Labels hide below 25%, handles below 12%.</span></div></div>
+<div class="fr" data-n="Guides — Spacing" style="width:580px" data-tok="color:--g-space|fill:14%|tick:6px"><div class="fb"><h6>Spacing guides · magenta</h6><code>--g-space · 1px line · fill 14% · end ticks 6px · pill min 18px<br>Smart selection: ring r4.5 at each object center · gap handle 4×16 r2 · marked ring = solid<br>Needs 2+ layers with equal spacing (list or grid) · Tidy up creates it</code><div class="g4 tl" data-g="M"></div><span class="cap">Zoom: stroke, handles and labels stay constant on screen. Labels hide below 25%, handles below 12%.</span></div></div>
+<div class="fr" data-n="Guides — Snapping &amp; measure" style="width:580px" data-tok="color:--g-snap|snap:dash 4 3|measure:solid + pill"><div class="fb"><h6>Snapping and measurement · orange</h6><code>Snap = 1px dashed 4 3 + × markers, within 4px while dragging<br>Measure = 1px solid + 6px end ticks + pixel pill (10/16, r3, min 18px)<br>Measure on hold ⌥ · nested ⌘⌥ · pinned ⇧M · bounds, not strokes<br>Multi-selection uses the group bounding box · values 0–2 decimals</code><div class="g4 tl" data-g="N"></div><span class="cap">Zoom: stroke, handles and labels stay constant on screen. Labels hide below 25%, handles below 12%.</span></div></div>
+<div class="fr" data-n="Guides — Rulers &amp; grids" style="width:580px" data-tok="color:--g-ruler|hit:9px|grid:8px"><div class="fb"><h6>Ruler guides and grids · red</h6><code>--g-ruler · 1px · hit area 9px · never used for errors on canvas</code><div class="g4 tl" data-g="R"></div><span class="cap">Zoom: stroke, handles and labels stay constant on screen. Labels hide below 25%, handles below 12%.</span></div></div>
+<div class="fr" data-n="Density &amp; motion" style="width:220px" data-tok="density/compact:24px|ease/standard:.2,0,0,1|grid:4px"><div class="fb"><h6>Density</h6>
+<div class="fl" style="height:20px"><b style="width:36px">20</b><input value="Ultra-compact"></div><div class="fl" style="height:24px"><b style="width:36px">24</b><input value="Compact"></div><div class="fl"><b style="width:36px">28</b><input value="Comfortable"></div>
+<span class="cap">Visual size and hit area are separate: min hit target 24px.</span><h6>Motion</h6><code>hover 80ms · toggle 120ms<br>menu 160ms · ease .2,0,0,1<br>reduced-motion: none</code></div></div>
+</main>
+
+<aside class="panel pr"><div class="tabs"><span class="on">Design</span><span>Prototype</span></div>
+<div class="pn"><i data-i="frame"></i><span id="pn"></span></div>
+<div class="sec"><h6>Position</h6><div class="g2"><div class="fl"><b>X</b><input id="px"></div><div class="fl"><b>Y</b><input id="py"></div></div></div>
+<div class="sec"><h6>Layout</h6><div class="g2"><div class="fl"><b>W</b><input id="pw"></div><div class="fl"><b>H</b><input id="ph"></div></div></div>
+<div class="sec"><h6>Appearance</h6><div class="g2"><div class="fl"><b>α</b><input value="100%"></div><div class="fl"><b>R</b><input value="0"></div></div></div>
+<div class="sec"><h6>Fill</h6><div class="fillrow"><span class="sw16" style="background:var(--frame)"></span><div class="fl" style="flex:1"><input style="padding-left:8px" value="Frame / surface"></div></div></div>
+<div class="sec"><h6>Variables used</h6><div id="tk"></div></div></aside>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+$('#sws').innerHTML=[['bg/canvas','--bg-canvas'],['bg/panel','--bg-panel'],['bg/input','--bg-input'],['bg/selected','--bg-sel'],['text/primary','--t1'],['text/secondary','--t2'],['accent','--accent'],['guide/geometry','--g-geo'],['guide/spacing','--g-space'],['guide/snap','--g-snap'],['danger','--danger'],['success','--ok']].map(c=>`<div class=sw><div class=chip style="background:var(${c[1]})"></div><div>${c[0]}</div><code></code></div>`).join('');
+const V=[['Primary','p'],['Secondary','s'],['Ghost','g'],['Icon','i']],S=[['Default',''],['Hover','h'],['Pressed','a'],['Focus','f'],['Disabled','d']];
+$('#mx').innerHTML='<span></span>'+S.map(s=>`<span class=cap>${s[0]}</span>`).join('')+V.map(v=>`<span class=cap>${v[0]}</span>`+S.map(s=>`<button class="btn ${v[1]} ${s[1]}" ${s[1]=='d'?'disabled':''}>${v[1]=='i'?'<i data-i=plus></i>':v[0]}</button>`).join('')).join('');
+$('#hs').innerHTML=[24,114,204].flatMap(x=>[36,90,144].map(y=>x==114&&y==90?'':`<rect x="${x-3}" y="${y-3}" width="7" height="7" class="hs"/>`)).join('');
+const G='var(--g-geo)',M='var(--g-space)',O='var(--g-snap)',R='var(--g-ruler)',P='var(--comp)',B='var(--bd2)';
+const o=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#d9d9d9"/>`,pn=(x,y,w,h)=>`<rect x="${x+.5}" y="${y+.5}" width="${w}" height="${h}" fill="var(--bg-panel)" stroke="${B}"/>`;
+const b=(x,y,w,h,c,op=1,d='')=>`<rect x="${x+.5}" y="${y+.5}" width="${w}" height="${h}" fill="none" stroke="${c}" opacity="${op}"${d?` stroke-dasharray="${d}"`:''}/>`;
+const q=(x,y,c,f='#fff')=>`<rect x="${x-3}" y="${y-3}" width="7" height="7" fill="${f}" stroke="${c}"/>`;
+const hs=(x,y,w,h,c)=>[0,.5,1].flatMap(i=>[0,.5,1].map(j=>i==.5&&j==.5?'':q(x+w*i,y+h*j,c))).join('');
+const p=(x,y,t,c,w=22)=>`<rect x="${x-w/2}" y="${y-7}" width="${w}" height="14" rx="3" fill="${c}"/><text x="${x}" y="${y+3}" fill="#fff" text-anchor="middle">${t}</text>`;
+const l=(d,c,op=1,da='',sw=1)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${sw}" opacity="${op}"${da?` stroke-dasharray="${da}"`:''}/>`;
+const xm=(a,y,c)=>l(`M${a-3} ${y-3}l6 6m0-6l-6 6`,c),fl=(x,y,w,h,c,op)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" opacity="${op}"/>`;
+const lk=(x,y,c)=>`<rect x="${x}" y="${y}" width="9" height="7" rx="1" fill="${c}"/>`+l(`M${x+2} ${y}V${y-2}a2.500 2.500 0 0 1 5 0v2`,c);
+const grid=c=>l([...Array(8)].map((_,i)=>`M${i*16+.5} 0V72M0 ${i*9+.5}H120`).join(''),c,.25);
+const ml=(a,b,c,d)=>l(`M${a} ${b}L${c} ${d}`+(b==d?`M${a} ${b-3}v6M${c} ${b-3}v6`:`M${a-3} ${b}h6M${c-3} ${d}h6`),O),po=(x,y,t,w=20)=>p(x,y,t,O,w),ds=x=>l(`M${x+.5} 4V68`,O,1,'4 3');
+const ri=(x,y,m=0)=>`<circle cx="${x}" cy="${y}" r="4.500" fill="${m?M:'var(--bg-panel)'}" stroke="${M}" stroke-width="1.500"/>`,gh=(x,y,h=16,w=4)=>`<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="2" fill="${M}"/>`,tri=()=>o(8,24,24,24)+o(48,24,24,24)+o(88,24,24,24)+[8,48,88].map(x=>b(x,24,24,24,G)).join('')+l('M20 36H100',M,.6);
+const VD='M14 52C28 14 72 14 106 46',vp=l(VD,G,1,'',1.5),cc=(x,y)=>`<circle cx="${x}" cy="${y}" r="3" fill="#fff" stroke="${G}"/>`,tx=(x,y,t,z=11)=>`<text x="${x}" y="${y}" font-size="${z}" fill="var(--t1)">${t}</text>`,nm=(x,y,t,w,c=G)=>`<rect x="${x}" y="${y}" width="${w}" height="12" rx="2" fill="${c}"/><text x="${x+5}" y="${y+9}" fill="#fff">${t}</text>`,tp=(i,d)=>`<path id="${i}" d="${d}" fill="none" stroke="${G}"/><text font-size="11" fill="var(--t1)"><textPath href="#${i}">Gipulo editor</textPath></text>`,TP='M12 50C30 10 80 10 108 46';
+const T={G:[
+['Hover','1px · 100% · no handles',o(30,18,60,36)+b(30,18,60,36,G)],
+['Selected','box + 8 handles + size pill',o(30,18,60,36)+b(30,18,60,36,G)+hs(30,18,60,36,G)+p(60,64,'60 × 36',G,42)],
+['Multi-select','children 60% · group box 100%',o(18,16,36,28)+o(66,30,36,28)+b(18,16,36,28,G,.6)+b(66,30,36,28,G,.6)+b(18,16,84,42,G)+hs(18,16,84,42,G)],
+['Resizing','ghost dashed 50% · live pill',o(30,18,72,36)+b(30,18,60,36,G,.5,'3 2')+b(30,18,72,36,G)+hs(30,18,72,36,G)+p(66,64,'72 × 36',G,42)],
+['Rotating','box follows angle · angle pill',`<g transform="rotate(20 60 34)">${o(30,18,60,32)+b(30,18,60,32,G)+hs(30,18,60,32,G)}</g>`+p(60,66,'20°',G,28)],
+['Corner radius','4 inner handles r3 · live pill',`<rect x="30" y="18" width="60" height="36" rx="10" fill="#d9d9d9"/>`+b(30,18,60,36,G)+[[42,30],[78,30],[42,42],[78,42]].map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="3" fill="#fff" stroke="${G}"/>`).join('')+p(60,64,'R 10',G,30)],
+['Locked','dashed 2 2 · 60% · lock badge',o(30,18,60,36)+b(30,18,60,36,G,.6,'2 2')+lk(84,8,G)],
+['Inactive','all parts 35% · no hit',`<g opacity=".35">${o(30,18,60,36)+b(30,18,60,36,G)+hs(30,18,60,36,G)}</g>`],
+['Text editing','box · caret 1px · selection fill',b(24,22,72,26,G)+fl(30,28,22,14,'var(--sel)',1)+`<text x="30" y="39" fill="var(--t1)">Gipulo</text>`+l('M52.500 28v14',G)],
+['Component','purple · name tab',o(30,20,60,34)+b(30,20,60,34,P)+hs(30,20,60,34,P)+p(49,13,'Button',P,38)],
+['Frame hover','outline + name in blue',o(30,22,60,36)+b(30,22,60,36,G)+`<text x="30" y="16" fill="${G}">Frame 12</text>`],
+['Vector anchors','default · hover · selected',l('M20 54C30 14 90 14 100 54',G,1,'',1.5)+l('M20 54L30 14M100 54L90 14',G,1,'',.75)+[[30,14],[90,14]].map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="3" fill="#fff" stroke="${G}"/>`).join('')+q(20,54,G)+q(60,24,G,'#b3dfff')+q(100,54,G,G)],
+['Dragging','ghost origin dashed · 50% copy',b(30,18,60,36,G,1,'3 2')+`<g opacity=".5">${o(36,26,60,36)}</g>`+p(66,68,'Δ 6, 8',G,34)]
+,['Frames and groups'],
+['Frame selected','name tab · box · pill',o(20,22,80,38)+b(20,22,80,38,G)+hs(20,22,80,38,G)+`<text x="20" y="17" fill="${G}">Frame 1</text>`],
+['Frame name hover','name chip 15% · outline',o(20,22,80,38)+b(20,22,80,38,G)+`<rect x="18" y="5" width="42" height="14" rx="2" fill="${G}" opacity=".15"/><text x="22" y="15" fill="${G}">Frame 1</text>`],
+['Frame renaming','input · white · 1px',o(20,22,80,38)+`<rect x="18.500" y="5.500" width="48" height="14" fill="#fff" stroke="${G}"/><text x="22" y="15" fill="#000">Frame 1</text>`+l('M56.500 8v8',G)],
+['Group selected','box only · no name',o(26,24,26,18)+o(60,36,30,20)+b(26,24,64,32,G)+hs(26,24,64,32,G)],
+['Child hover','child outline 60%',o(26,24,26,18)+o(60,36,30,20)+b(26,24,64,32,G)+hs(26,24,64,32,G)+b(60,36,30,20,G,.6)],
+['Deep select ⌘','parent dashed 40%',b(18,14,84,48,G,.4,'3 2')+o(30,26,28,24)+o(66,26,28,24)+b(66,26,28,24,G)+hs(66,26,28,24,G)],
+['Clipped child','outline continues 50%',pn(14,14,64,44)+o(46,26,32,20)+b(46,26,56,20,G,.5,'3 2')+b(46,26,32,20,G)],
+['Mask','dashed contour',o(24,20,40,40)+`<circle cx="84" cy="40" r="22" fill="none" stroke="${G}" stroke-dasharray="4 2"/>`+b(24,20,40,40,G)],
+['Component set','purple dashed · name tab',b(14,22,92,38,P,1,'4 2')+nm(14,10,'Button',44,P)+o(22,30,32,22)+o(64,30,32,22)+b(22,30,32,22,P)],
+['Vector edit mode'],
+['Enter','points hollow · no box',vp+q(14,52,G)+q(52,23,G)+q(106,46,G)],
+['Point hover','9px · light fill',vp+q(14,52,G)+`<rect x="101.500" y="41.500" width="9" height="9" fill="#b3dfff" stroke="${G}"/>`],
+['Selected','solid · handles r3',vp+l('M106 46L72 14',G,1,'',.75)+cc(72,14)+q(106,46,G,G)+q(14,52,G)],
+['Marquee','dashed · 8% fill',vp+fl(6,10,64,50,G,.08)+b(6,10,64,50,G,1,'3 2')+q(14,52,G,G)+q(52,23,G,G)+q(106,46,G)],
+['Points box','edit several together',vp+b(14,23,38,29,G)+hs(14,23,38,29,G)+q(14,52,G,G)+q(52,23,G,G)],
+['Segment hover','2px · add-point ghost',l(VD,G,1,'',3)+`<circle cx="60" cy="22" r="4" fill="#fff" stroke="${G}"/>`+l('M60 20v4M58 22h4',G)+q(14,52,G)+q(106,46,G)],
+['Pen preview','rubber band dashed 50%',l('M14 52C28 14 60 14 60 30',G,1,'',1.5)+q(14,52,G)+q(60,30,G,G)+l('M60 30L100 54',G,.5,'3 2')+`<circle cx="100" cy="54" r="3" fill="none" stroke="${G}" opacity=".6"/>`],
+['Close path','ring r7 on first point',vp+q(14,52,G)+`<circle cx="14" cy="52" r="7" fill="none" stroke="${G}"/>`+q(106,46,G)],
+['Bend tool','pull handles from segment',vp+q(14,52,G)+q(106,46,G)+l('M60 22L40 14M60 22L80 14',G,1,'',.75)+cc(40,14)+cc(80,14)+q(60,22,G,G)],
+['Mirroring','same length · independent',l('M12 36H48',G,1,'',.75)+cc(12,36)+cc(48,36)+q(30,36,G,G)+l('M74 44L96 24M74 44L106 54',G,1,'',.75)+cc(96,24)+cc(106,54)+q(74,44,G,G)],
+['Region hover','closed region 12%',`<path d="M20 52L60 14L100 52Z" fill="${G}" fill-opacity=".12" stroke="${G}"/>`+q(20,52,G)+q(60,14,G)+q(100,52,G)],
+['Lasso','dashed loop · points in',`<path d="M12 44C20 8 70 8 76 40C70 62 20 60 12 44Z" fill="${G}" fill-opacity=".06" stroke="${G}" stroke-dasharray="3 2"/>`+q(30,28,G,G)+q(52,34,G,G)+q(100,52,G)],
+['Text edit and text on path'],
+['Auto width','box hugs text · 8 handles',tx(32,40,'Gipulo',14)+b(28,24,58,22,G)+hs(28,24,58,22,G)],
+['Fixed width','wraps · side handles',tx(24,32,'Design tokens')+tx(24,46,'for editors')+b(20,16,80,38,G)+hs(20,16,80,38,G)],
+['Auto height','width handles only',tx(24,32,'Design tokens')+tx(24,46,'for editors')+b(20,16,80,38,G)+q(20,35,G)+q(100,35,G)],
+['Hover','1px outline',tx(24,32,'Design tokens')+tx(24,46,'for editors')+b(20,16,80,38,G)],
+['Range select','--sel fill · box 1px',b(20,16,80,38,G)+fl(24,20,60,14,'var(--sel)',1)+tx(24,32,'Design tokens')+tx(24,46,'for editors')],
+['Composition','dashed underline (IME)',b(20,22,80,26,G)+tx(24,39,'Gipul')+l('M54 42H78',G,1,'2 1',1.5)+tx(54,39,'好o')],
+['Overflow','fixed height · … tab',b(20,14,80,28,G)+hs(20,14,80,28,G)+tx(24,28,'Design tokens')+p(100,50,'…',G,18)],
+['Path text','proposal · start / end',tp('t1',TP)+q(12,50,G,G)+q(108,46,G,G)],
+['Path offset','drag start · % pill',tp('t2',TP)+q(30,26,G,G)+q(108,46,G)+p(30,60,'12%',G,26)],
+['Path flip','side toggle on path',tp('t3',TP)+nm(52,6,'⇅',16)+q(12,50,G)+q(108,46,G)],
+['Precision details'],
+['Small object','under 24px: 4 corners',o(50,28,16,16)+b(50,28,16,16,G)+q(50,28,G)+q(66,28,G)+q(50,44,G)+q(66,44,G)],
+['Tiny','under 8px: outline + dot',o(58,34,6,6)+b(58,34,6,6,G)+`<circle cx="61" cy="37" r="1.500" fill="${G}"/>`],
+['Hit areas','handle 7px · hit 16px',o(30,22,60,32)+b(30,22,60,32,G)+q(30,22,G)+q(90,22,G)+[[22,14],[82,14]].map(c=>`<rect x="${c[0]}" y="${c[1]}" width="16" height="16" fill="${G}" opacity=".12" stroke="${G}" stroke-dasharray="2 2"/>`).join('')],
+['Rotate zone','outside corner arc',o(26,24,60,32)+b(26,24,60,32,G)+q(86,24,G)+`<path d="M92 12A14 14 0 0 1 104 26" fill="none" stroke="${G}" stroke-dasharray="2 2"/><text x="96" y="14" fill="${G}">↻</text>`],
+['Casing','white halo on blue',`<rect width="120" height="72" fill="#4ab3ff"/><rect x="29" y="19" width="62" height="36" fill="#0b6fb8" stroke="#fff" stroke-width="3"/>`+b(30,20,60,34,G)],
+['Dark canvas','same blue · white handles',`<rect width="120" height="72" fill="#1e1e1e"/>`+o(30,14,60,34)+b(30,14,60,34,G)+hs(30,14,60,34,G)+p(60,58,'60 × 34',G,42)],
+['Pill flips','near edge: pill goes above',`<rect y="62" width="120" height="10" fill="var(--bd)"/>`+o(30,36,60,24)+b(30,36,60,24,G)+hs(30,36,60,24,G)+p(60,26,'60 × 24',G,42)],
+['Angle ticks','snap marks every 15°',`<g transform="rotate(15 60 32)">${o(30,18,60,28)+b(30,18,60,28,G)+hs(30,18,60,28,G)}</g>`+p(60,62,'15°',G,28)+l('M100 32h8M99 40l8 2M99 24l8-2',G,.5)],
+['Pixel crisp','x.5 offset · 1px',b(20,16,30,30,G)+`<rect x="70" y="16" width="30" height="30" fill="none" stroke="${G}" stroke-width="2" opacity=".4"/><text x="35" y="62" text-anchor="middle" fill="var(--t2)">x.5</text><text x="85" y="62" text-anchor="middle" fill="var(--t2)">x</text>`],
+['Hover vs selected','60% hover · 100% selected',o(14,22,40,30)+b(14,22,40,30,G)+hs(14,22,40,30,G)+o(66,22,40,30)+b(66,22,40,30,G,.6)]
+],M:[
+['Gap','fill 14% · line · pill',o(14,18,36,36)+o(70,18,36,36)+fl(50,18,20,36,M,.14)+l('M50 36h20M50 31v10M70 31v10',M)+p(60,36,'20',M)],
+['Padding','4 sides · pill per side',pn(14,10,92,52)+fl(15,11,91,14,M,.14)+fl(15,48,91,14,M,.14)+fl(15,25,16,23,M,.14)+fl(90,25,16,23,M,.14)+o(31,25,59,23)+p(60,18,'14',M)+p(23,36,'16',M,20)],
+['Equal distribution','equal gaps · bracket',o(10,26,24,20)+o(48,26,24,20)+o(86,26,24,20)+fl(34,26,14,20,M,.14)+fl(72,26,14,20,M,.14)+p(41,36,'14',M,20)+p(79,36,'14',M,20)+l('M41 20v-6M79 20v-6M41 14h38',M)],
+['Margin to parent','4 lines to edges',pn(10,8,100,56)+o(36,24,48,24)+l('M10 36h26M84 36h26M60 8v16M60 48v16',M)+p(23,36,'26',M,18)+p(97,36,'26',M,18)+p(60,16,'16',M,18)+p(60,56,'16',M,18)],
+['Label hover','default · hover ring',l('M10 36h100',M)+p(35,36,'20',M)+`<rect x="68" y="26" width="34" height="20" rx="6" fill="none" stroke="${M}" opacity=".4" stroke-width="3"/>`+p(85,36,'20',M)],
+['Editing value','input · white · 1px',l('M14 36h106',M)+`<rect x="45" y="28" width="30" height="16" rx="3" fill="#fff" stroke="${M}"/><text x="51" y="39" fill="${M}">16</text>`+l('M58.500 31v10',M)],
+['Fixed','hollow pill · text only',l('M14 36h92',M)+`<rect x="42" y="29" width="36" height="14" rx="3" fill="var(--bg-panel)" stroke="${M}"/><text x="60" y="39" fill="${M}" text-anchor="middle">Fixed</text>`],
+['Auto','dashed line · "Auto" pill',l('M14 36h92',M,1,'3 2')+p(60,36,'Auto',M,32)],
+['Preview','50% · dashed · no label hit',`<g opacity=".5">${o(14,18,36,36)+o(70,18,36,36)+fl(50,18,20,36,M,.14)+l('M50 36h20',M,1,'3 2')+p(60,36,'20',M)}</g>`]
+,['Smart selection · rings and handles'],
+['Available','ring at each center · pink line',tri()+ri(20,36)+ri(60,36)+ri(100,36)],
+['Hover','gap handles appear',tri()+ri(20,36)+ri(60,36)+ri(100,36)+gh(40,36)+gh(80,36)],
+['Marked','solid ring = marked',tri()+ri(20,36)+ri(60,36,1)+ri(100,36)],
+['Drag gap','all gaps change · live pill',o(6,24,22,24)+o(52,24,22,24)+o(98,24,22,24)+fl(28,24,24,24,M,.14)+fl(74,24,24,24,M,.14)+gh(40,36,24,6)+p(40,36,'24',M,20)+p(86,36,'24',M,20)],
+['Reorder','ghost 60% · insertion line',o(8,24,24,24)+b(48,24,24,24,M,.8,'3 2')+o(88,24,24,24)+`<g opacity=".6">${o(60,12,24,24)}</g>`+ri(72,24,1)+l('M80.500 16V56',M,1,'',2)],
+['Resize marked','neighbours keep equal gap',o(8,24,24,24)+o(48,24,32,24)+o(96,24,16,24)+ri(64,36,1)+gh(80,36,12)+p(64,16,'32',M,20)],
+['Duplicate','mark ring, then duplicate',tri()+ri(60,36,1)+`<g opacity=".5">${o(66,32,24,24)}</g>`+b(66,32,24,24,M,1,'3 2')],
+['Delete marked','gap closes',o(8,24,24,24)+b(48,24,24,24,M,.5,'3 2')+ri(60,36,1)+o(88,24,24,24)],
+['2D grid','row and column handles',[10,40].flatMap(y=>[8,48,88].map(x=>o(x,y,24,18)+ri(x+12,y+9))).join('')+gh(40,19)+gh(80,19)+gh(40,49)+gh(80,49)+gh(60,34,4,16)],
+['Tidy up','messy → equal gaps',o(8,14,22,24)+o(46,30,22,24)+o(86,20,22,24)+[8,49,90].map(x=>b(x,26,22,24,M,.7,'3 2')).join('')],
+['Not available','unequal gaps · no pink',o(8,24,24,24)+o(40,24,24,24)+o(90,24,24,24)+b(8,24,24,24,G)+b(40,24,24,24,G)+b(90,24,24,24,G)]
+],N:[
+['Drag snapping · one object'],
+['Edge','line spans both · × at edges',o(20,12,40,20)+o(20,44,64,16)+ds(20)+xm(20,12,O)+xm(20,32,O)+xm(20,44,O)+xm(20,60,O)],
+['Center','through both centers',o(30,12,60,18)+o(42,44,36,18)+ds(60)+xm(60,21,O)+xm(60,53,O)],
+['Equal gap','both gaps labelled',o(8,26,22,20)+o(48,26,22,20)+o(88,26,22,20)+ml(30,36,48,36)+ml(70,36,88,36)+po(39,36,'18')+po(79,36,'18')],
+['Size match','same size · value pill',o(10,12,50,20)+o(10,44,50,16)+ml(10,38,60,38)+po(35,38,'50')],
+['Parent edge','line on frame edge',pn(8,8,104,56)+o(8,28,40,24)+ds(8)],
+['Pixel grid','cell 35% · crosshair',grid(O)+fl(48,27,16,9,O,.35)+xm(48,27,O)],
+['Text baseline','line under baselines',`<text x="14" y="30" fill="var(--t1)">Aa</text><text x="70" y="30" fill="var(--t1)" style="font-size:14px">Aa</text>`+l('M8 31.500H112',O,1,'4 3')+xm(8,31,O)+xm(112,31,O)],
+['Ruler guide','guide stays red · line orange',l('M40.500 0V72',R)+o(40,20,36,24)+l('M40.500 14V50',O,1,'4 3')],
+['Drag snapping · multiple objects'],
+['Group edge','group box 60% · line on group edge',o(12,10,28,18)+o(30,32,28,18)+b(12,10,46,40,G,.6,'3 2')+o(20,56,38,10)+ds(58)+xm(58,10,O)+xm(58,50,O)+xm(58,56,O)+xm(58,66,O)],
+['Group center','group center = target center',o(12,10,28,18)+o(40,30,28,18)+b(12,10,56,38,G,.6,'3 2')+o(22,56,36,10)+ds(40)+xm(40,10,O)+xm(40,66,O)],
+['Group gap','gap to neighbour = other gap',o(8,24,16,22)+o(30,24,16,22)+b(8,24,38,22,G,.6,'3 2')+o(64,24,16,22)+o(96,24,16,22)+ml(46,36,64,36)+ml(80,36,96,36)+po(55,36,'18')+po(88,36,'18')],
+['Child edge','line to a child, not the group',o(14,10,30,22)+o(30,34,30,22)+b(14,10,46,46,G,.6,'3 2')+o(30,62,50,8)+ds(30)+xm(30,34,O)+xm(30,62,O)],
+['Measure · hold ⌥ · one object'],
+['Beside','selected → hovered',o(10,22,36,28)+b(10,22,36,28,G)+o(74,22,36,28)+b(74,22,36,28,O)+ml(46,36,74,36)+po(60,36,'28')],
+['Above / below','vertical gap',o(40,6,40,18)+b(40,6,40,18,G)+o(40,46,40,18)+b(40,46,40,18,O)+ml(60,24,60,46)+po(60,35,'22')],
+['Diagonal','two axes: x and y',o(8,8,30,20)+b(8,8,30,20,G)+o(70,40,40,24)+b(70,40,40,24,O)+ml(38,18,70,18)+ml(90,28,90,40)+po(54,18,'32')+po(90,34,'12',18)],
+['Inside hovered','4 distances out',b(10,8,100,56,O)+o(36,24,48,24)+b(36,24,48,24,G)+ml(10,36,36,36)+ml(84,36,110,36)+ml(60,8,60,24)+ml(60,48,60,64)+po(23,36,'26',18)+po(97,36,'26',18)+po(60,16,'16',18)+po(60,56,'16',18)],
+['Hovered inside','4 distances in',o(10,8,100,56)+b(10,8,100,56,G)+o(36,24,48,24)+b(36,24,48,24,O)+ml(10,36,36,36)+ml(84,36,110,36)+ml(60,8,60,24)+ml(60,48,60,64)+po(23,36,'26',18)+po(97,36,'26',18)+po(60,16,'16',18)+po(60,56,'16',18)],
+['Overlapping','edge pairs',o(10,10,50,34)+b(10,10,50,34,G)+o(40,26,60,34)+b(40,26,60,34,O)+ml(10,52,40,52)+ml(106,10,106,26)+po(25,52,'30')+po(106,18,'16',18)],
+['Decimal','non-integer · max 2dp',o(10,22,36,28)+o(74,22,36,28)+ml(46,36,74,36)+po(60,36,'28.5',28)],
+['Tight gap','under 16px: label lifts',o(10,24,48,28)+o(64,24,48,28)+ml(58,38,64,38)+l('M61 38V22',O)+po(61,15,'6',18)],
+['Zero','touching: dot + 0',o(10,24,48,28)+o(58,24,48,28)+`<circle cx="58" cy="38" r="2.500" fill="${O}"/>`+l('M58 22V28',O)+po(58,15,'0',18)],
+['Measure · multiple, nested, vector'],
+['Group → object','from group bounds',o(10,10,24,20)+o(30,28,24,20)+b(10,10,44,38,G)+o(80,18,28,28)+b(80,18,28,28,O)+ml(54,32,80,32)+po(67,32,'26')],
+['Nested ⌘⌥','target is the child',b(66,6,48,60,B,1,'3 2')+o(72,12,36,20)+o(72,40,36,20)+b(72,40,36,20,O)+o(10,20,34,24)+b(10,20,34,24,G)+ml(44,42,72,42)+po(58,42,'28')],
+['Vector anchors','anchor → anchor, dx / dy',l('M14 54C30 20 70 20 100 36',G,1,'',1.5)+q(14,54,G)+q(100,36,G,G)+ml(14,62,100,62)+ml(108,36,108,54)+po(57,62,'86')+po(108,45,'18',18)],
+['Pinned ⇧M','stays until Esc · hollow pill',o(10,22,36,28)+o(74,22,36,28)+ml(46,36,74,36)+`<rect x="50" y="29" width="20" height="14" rx="3" fill="var(--bg-panel)" stroke="${O}"/><text x="60" y="39" fill="${O}" text-anchor="middle">28</text>`],
+['Nudge ⌥⇧↑','live value + step arrow',o(10,6,40,16)+o(10,32,40,26)+b(10,32,40,26,G)+ml(30,22,30,32)+po(30,27,'10',18)+`<text x="70" y="44" fill="${O}" style="font-size:16px">↑</text>`],
+['Lifecycle and label rules'],
+['Approach → snap','40% dotted → 100% dashed',o(8,10,24,16)+o(10,40,24,16)+l('M8.500 6V62',O,.4,'2 3')+o(70,10,24,16)+o(70,40,24,16)+ds(70)+xm(70,18,O)+xm(70,48,O)],
+['Released','guide fades out 120ms',o(20,14,40,20)+o(20,42,40,16)+l('M20.500 6V66',O,.25,'4 3')],
+['Snap off','⌘ held · guide 20%',o(20,14,40,20)+o(26,42,40,16)+l('M20.500 6V66',O,.2,'2 3')+p(86,36,'⌘ held','var(--t2)',46)],
+['Zoom < 25%','lines only · no labels',o(20,14,40,20)+o(20,42,40,16)+ds(20)+ml(60,24,100,24)],
+['Label collision','stagger above / below',o(8,26,18,20)+o(32,26,18,20)+o(56,26,18,20)+ml(26,36,32,36)+ml(50,36,56,36)+po(29,22,'6',16)+po(53,50,'6',16)],
+['Fractional','pixel snap off · 2dp',o(10,22,36,28)+o(74,22,36,28)+ml(46,36,74,36)+po(60,36,'28.37',34)]
+],R:[
+['Default','1px · full length',l('M40.500 0V72M0 30.500H120',R)],
+['Hover','9px hit band · resize cursor',fl(36,0,9,72,R,.15)+l('M40.500 0V72',R)+`<text x="52" y="40" fill="${R}">↔</text>`],
+['Selected','2px · position pill',l('M40 0V72',R,1,'',2)+p(40,10,'128',R,28)],
+['Dragging from ruler','ruler band · live pill',fl(0,0,120,8,'var(--bg-input)',1)+l('M70.500 0V72',R)+p(92,36,'x 128',R,36)],
+['Locked','dashed 4 2 · lock badge',l('M40.500 0V72',R,.8,'4 2')+lk(46,30,R)],
+['Layout grid · columns','4 col · 20 / gutter 8',[8,36,64,92].map(x=>fl(x,0,20,72,R,.12)).join('')],
+['Layout grid · square','8px · 25%',grid(R)],
+['Hidden','toggled via ⌘; · no hit area',`<text x="60" y="40" fill="var(--t3)" text-anchor="middle">Guides hidden</text>`]
+]};
+$$('[data-g]').forEach(e=>e.innerHTML=T[e.dataset.g].map(t=>t.length<3?`<h6 style="grid-column:1/-1;margin-top:6px">${t[0]}</h6>`:`<div><svg viewBox="0 0 120 72">${t[2]}</svg><div class=cap>${t[0]}</div><code>${t[1]}</code></div>`).join(''));
+const D=[[0,'frame','Checkout / Desktop','','o'],[1,'frame','Header','','o'],[2,'frame','Nav','','o'],[3,'inst','Logo','cmp',''],[3,'rect','Links','','o'],[4,'text','Link / Home','',''],[4,'text','Link / Pricing','',''],[3,'rect','Actions','','o'],[4,'inst','Button / Primary','cmp','o'],[5,'text','Label','',''],[5,'frame','Icon','lk','o'],[6,'pen','Vector','lk',''],[1,'frame','Content','','o'],[2,'frame','Cart','','o'],[3,'frame','Item list','','o'],[4,'rect','Item row','sel','o'],[5,'frame','Thumbnail','kid','o'],[6,'rect','Image','kid',''],[6,'rect','Mask','kid hid',''],[5,'frame','Details','kid','o'],[6,'text','Title','kid',''],[6,'inst','Quantity stepper','kid cmp','o'],[7,'frame','Minus','kid','o'],[8,'pen','Icon / minus','kid','o'],[9,'pen','Stroke / rounded cap / 1.5px outside','kid hv',''],[7,'text','Value','kid',''],[2,'frame','Summary','','c'],[1,'frame','Footer','','c']];
+$('#deep').innerHTML=D.map(r=>{const[d,ic,n,st,o]=r,L=8+Math.min(d,8)*16+Math.max(0,d-8)*8,g=[...Array(d)].map((_,k)=>`<i class=ig style="left:${16+(k<8?k*16:128+(k-8)*8)}px"></i>`).join('');
+return`<div class="lr ${st}" style="padding-left:${L}px">${g}<i class=ch data-i=${o?'chev':'x'} ${o=='o'?'style="transform:rotate(90deg)"':''}></i><i data-i=${ic}></i><span class=nm>${n}</span><span class=ac><i data-i=lock></i><i data-i=eye></i></span></div>`}).join('');
+$('#deep').scrollTop=$('#deep .hv').offsetTop-340;
+const F=$$('.fr');
+F.forEach((f,k)=>{f.dataset.k=k;f.insertAdjacentHTML('afterbegin',`<div class=ft><i data-i=frame></i>${f.dataset.n}</div>`)});
+$('#ly').innerHTML='<div class=lr><i class=ch data-i=chev style="transform:rotate(90deg)"></i><i data-i=frame></i><span class=nm>Gipulo UI kit</span><span class=ac><i data-i=lock></i><i data-i=eye></i></span></div>'+F.map((f,k)=>`<div class=lr data-k=${k} style="--d:1"><i class=ch></i><i data-i=frame></i><span class=nm>${f.dataset.n}</span><span class=ac><i data-i=lock></i><i data-i=eye></i></span></div>`).join('');
+$$('[data-i]').forEach(e=>e.innerHTML='<svg class=ic><use href="#i-'+e.dataset.i+'"/></svg>');
+function paint(){$$('.sw').forEach(s=>{const c=getComputedStyle(s.firstChild).backgroundColor.match(/[\d.]+/g).map(Number);s.querySelector('code').textContent=c.length>3&&c[3]<1?Math.round(c[3]*100)+'% black/white':'#'+c.slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('')})}
+function sel(k){const f=F[k],b=f.querySelector('.fb'),w=b.offsetWidth,h=b.offsetHeight;
+$$('.hd,.pill').forEach(e=>e.remove());F.forEach(x=>x.classList.toggle('sel',x==f));
+[[0,0],[100,0],[0,100],[100,100]].forEach(p=>b.insertAdjacentHTML('beforeend',`<i class=hd style="left:${p[0]}%;top:${p[1]}%"></i>`));
+b.insertAdjacentHTML('beforeend',`<span class=pill>${w} × ${h}</span>`);
+$$('#ly .lr').forEach(r=>r.classList.toggle('sel',r.dataset.k==k));
+$('#pn').textContent=f.dataset.n.replace('&amp;','&');$('#px').value=f.offsetLeft;$('#py').value=f.offsetTop+20;$('#pw').value=w;$('#ph').value=h;
+$('#tk').innerHTML=f.dataset.tok.split('|').map(t=>{const[a,...c]=t.split(':');return`<div class=tok>${a}<code>${c.join(':')}</code></div>`}).join('')}
+document.addEventListener('click',e=>{const t=e.target;let m;
+if(m=t.closest('.tool:not(#th)')){$$('.tool').forEach(x=>x.classList.toggle('on',x==m))}
+else if(t.closest('#th')){const d=document.documentElement,dark=d.dataset.theme?d.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;d.dataset.theme=dark?'light':'dark';paint()}
+else if(m=t.closest('.tg,.cb'))m.classList.toggle('on');
+else if(m=t.closest('.rd')){m.parentNode.querySelectorAll('.rd').forEach(x=>x.classList.toggle('on',x==m))}
+else if(m=t.closest('.sg span')){m.parentNode.querySelectorAll('span').forEach(x=>x.classList.toggle('on',x==m))}
+if(m=t.closest('#ly .lr[data-k]')){sel(m.dataset.k);F[m.dataset.k].scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'})}
+else if(m=t.closest('.fr'))sel(m.dataset.k)});
+paint();sel(2);
+</script></body></html>
