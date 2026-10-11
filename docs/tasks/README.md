@@ -28,6 +28,7 @@ Entries so far:
 - `2026-10-11_005_repo-scaffold.md` — repo scaffold: core crates, shell, wasm pipeline, CI, fixtures (zero editor features).
 - `2026-10-11_006_design_system_formalization.md` — 14 Design System docs: tokens, components with all states, canvas UI + closed guide-color language, cursors, motion, a11y audit, responsive, research notes.
 - `2026-10-11_007_design_system_implementation.md` — DS code v1: drift-tested token layer, 17 registry entries (15 components + tokens + scrollbar) with 47 state tests, gallery story page, editor-frame demo.
+- `2026-10-11_015_rvs_affordance.md` — ADR-005 accepted under owner delegation: RVS uses magenta (eligible) and success green (activated) with shape cues; red stays for rulers. Docs-only.
 - `2026-10-11_014_recovery_policy.md` — ADR-008 (P0-class, PROPOSED): trap recovery from committed whole-file snapshots; autosave cadence; 3 generations; local-only diagnostics; release-excluded fault injection. Docs-only; no code yet.
 - `2026-10-11_013_segment_index.md` — `gip-geometry::SegmentIndex` (ADR-007, PROPOSED): static BVH per path; equal to brute force; 1.13 ms vs 142 ms per query on a dense 1000-segment fixture (fixture-specific; caveat in ADR). 131 workspace tests green.
 - `2026-10-11_012_history_transactions.md` — `gip-history`: op log (ADR-004), atomic transactions, exact undo/redo, byte budget, dirty tracking; FieldKey accessors in gip-document; 128 workspace tests green. Write door CLOSED (A6): `gip-document::edit` is the only op vocabulary; boundary check enforces it.

@@ -198,6 +198,11 @@ must be logged here with date, what changed, and why.
   ADRs (process: `rules/documentation.md` D7). No memory distillation files changed content;
   `08_foundation_roadmap.md` status and the master beacon §6 updated to reflect step 1 complete.
 
+## 2026-10-11 — Task 015: RVS affordance language (ADR-005)
+
+- **What:** ADR-005 ACCEPTED under the owner's delegation: eligible segments = magenta (guide/spacing) + dot; activated = success green + count pill; context = blue dashed; red stays rulers-only. Closes the 08 §8 pending item.
+- **Why:** RVS is the signature feature and was blocked on this decision. Recommendation already in the DS docs; no new colour tokens.
+
 ## 2026-10-11 — Task 014: recovery & integrity policy (ADR-008, P0-class)
 
 - **What:** ADR-008 (PROPOSED): trap recovery from committed, validated whole-file snapshots kept by the shell; core serializes/validates, shell stores; 3 generations; autosave 2 s debounce / 30 s max while dirty; local-only diagnostics via panic hook; fault-injection feature excluded from release; restore copy with honest loss statement.

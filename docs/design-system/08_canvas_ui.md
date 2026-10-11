@@ -145,7 +145,7 @@ labels** · label collision: stagger above/below · fractional: pixel snap off, 
   (never overlap two pills); below 25% zoom labels disappear entirely (§1).
 - Never interactive except where specified (editing value = white input variant, magenta-stroked).
 
-## 8. RVS affordance (signature feature — color RECOMMENDATION pending a small ADR)
+## 8. RVS affordance (signature feature — ACCEPTED by ADR-005, 2026-10-11)
 
 The vision doc proposed red = eligible segments, green = activated. Canvas law reserves red for
 ruler guides and forbids red-means-error on canvas — a second red meaning risks the closed

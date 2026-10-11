@@ -116,7 +116,8 @@
    (their own tests required). **Remaining queued foundation items:** ADR-005 (RVS affordance colours — needs
    owner/designer input before the RVS feature) · Playwright E2E (starts when the shell imports the bindings) ·
    WebGL2 parity ADR (renderer phase) · text-shaping ADR (text phase) · `documentHash` + NFC (dependency decisions).
-15. Only after the above: begin editor implementation (explicit user go-ahead required).
+15. ✅ **DONE (2026-10-11): ADR-005 RVS affordance language** — ACCEPTED under owner delegation (task 015). Magenta eligible, green activated, red reserved for rulers.
+16. Only after the above: begin editor implementation (explicit user go-ahead required).
 
 ## Standing task-completion definition (every task, always)
 
