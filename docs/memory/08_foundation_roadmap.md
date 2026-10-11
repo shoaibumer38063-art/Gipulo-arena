@@ -118,7 +118,8 @@
    WebGL2 parity ADR (renderer phase) · text-shaping ADR (text phase) · `documentHash` + NFC (dependency decisions).
 15. ✅ **DONE (2026-10-11): ADR-005 RVS affordance language** — ACCEPTED under owner delegation (task 015). Magenta eligible, green activated, red reserved for rulers.
 16. ✅ **DONE (2026-10-11): documentHash (SHA-256) + NFC — ADR-009 ACCEPTED** under owner delegation (task 017). `gip-document` writes and verifies `documentHash`; rejects non-NFC strings; deps registered (`sha2`, `unicode-normalization`).
-17. Only after the above: begin editor implementation (explicit user go-ahead required). Still open before the editor: WebGL2 parity ADR (renderer phase), text-shaping ADR (text phase), Playwright E2E (when the shell imports bindings).
+17. ✅ **DONE (2026-10-11): WebGL2 parity ADR-010 and text-shaping ADR-011** — both ACCEPTED under owner delegation (task 018). No dependencies added; they are registered when their features start.
+18. Only after the above: begin editor implementation (explicit user go-ahead required). Still open before the editor: Playwright E2E (when the shell imports bindings). Decided later with their features: text rasterization path, text-on-path.
 
 ## Standing task-completion definition (every task, always)
 

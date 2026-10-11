@@ -202,6 +202,12 @@ must be logged here with date, what changed, and why.
 
 - Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
 
+## 2026-10-11 — Task 018: WebGL2 parity tiers (ADR-010) and text shaping (ADR-011)
+
+- **ADR-010 ACCEPTED:** WebGPU = T1 reference; WebGL2 = T2 parity for core canvas features; T3 = declared degraded fallbacks with a visible badge. Shared renderer path is render-only (WebGL2 has no compute and no storage buffers).
+- **ADR-011 ACCEPTED:** shaping = harfrust; font parsing = skrifa/read-fonts. rustybuzz (archived 2026-07-26) and ttf-parser (unmaintained) rejected. No dependency added yet; registered when the text feature starts.
+- **Open, explicitly:** text rasterization path (SDF/atlas vs CPU) and text-on-path.
+
 ## 2026-10-11 — Task 017: documentHash (SHA-256) and NFC (ADR-009)
 
 - **What:** `gip-document` now writes `meta.documentHash` = SHA-256 of the canonical document section on save, verifies it on load (mismatch = invalid), and rejects any non-NFC string (keys and values) on save and load. New module `integrity.rs`; deps `sha2` 0.11 and `unicode-normalization` 0.1 registered in ADR-009 and the dependency registry; boundary allow-list updated.

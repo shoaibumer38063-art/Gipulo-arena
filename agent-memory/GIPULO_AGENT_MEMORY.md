@@ -215,6 +215,7 @@ from the four sources. Reading order and index: `gipulo/docs/memory/00_INDEX.md`
      generations; local-only diagnostics; fault injection release-excluded. Owner review: cadence, retention,
      clean-close, copy. Docs-only.
   15. ✅ **DOCUMENT HASH + NFC (2026-10-11, task 017)** — ADR-009 ACCEPTED under owner delegation. documentHash = SHA-256 of the document section (written on save, verified on load). Non-NFC strings rejected, never rewritten. Deps: sha2 0.11, unicode-normalization 0.1 (registered).
+  16. ✅ **WEBGL2 PARITY + TEXT SHAPING (2026-10-11, task 018)** — ADR-010 ACCEPTED (T1 WebGPU reference, T2 WebGL2 parity, T3 declared fallbacks; render-only shared path). ADR-011 ACCEPTED (harfrust + skrifa; rustybuzz archived 2026-07-26; ttf-parser unmaintained). No deps added yet.
   14. ✅ **ADR-005 RVS AFFORDANCE (2026-10-11, task 015)** — ACCEPTED under owner delegation of design decisions.
      Magenta eligible · success green activated (+ count pill) · blue dashed context · red = rulers only.
 - Next engine steps:
