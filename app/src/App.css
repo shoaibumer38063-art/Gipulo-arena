@@ -1,0 +1,18 @@
+/* Engine status line. Tokens only (no hardcoded values outside the token layer). */
+.engine-status {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font: var(--type-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.engine-status[data-engine-status='ready'] {
+  color: var(--text-primary);
+}
+
+.engine-status[data-engine-status='error'] {
+  color: var(--danger-text);
+}

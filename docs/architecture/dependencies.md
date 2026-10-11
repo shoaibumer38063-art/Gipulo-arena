@@ -63,6 +63,7 @@ the facade is the only boundary. Violations fail CI with the exact edge named.
 | `typescript` | 7.0.2 | Strict typing law (CQ5) — shell must typecheck with `--strict`-class settings. |
 | `vitest` | 4.1.11 | Shell test runner (engine-core.md §9 layer 3). |
 | `@types/react`, `@types/react-dom` | 19.3.0 | Type packages for React (non-runtime). |
+| `@playwright/test` (+ Chromium via `playwright install`) | dev only | Browser E2E of the shell ↔ engine handshake (`app/e2e`, roadmap step 6). Runs against the production build. Added with task 019. |
 
 ### Toolchain (not dependencies, but version-locked)
 

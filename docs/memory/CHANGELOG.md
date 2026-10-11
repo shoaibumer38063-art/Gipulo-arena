@@ -202,6 +202,13 @@ must be logged here with date, what changed, and why.
 
 - Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
 
+## 2026-10-11 — Task 019: shell ↔ engine wiring + browser E2E
+
+- **What:** the shell loads the Wasm core (`loadEngine()` in `app/src/engine/client.ts`), runs the protocol handshake, and shows a status line (`Engine ready · protocol 0`). No editor features.
+- **Tests:** Playwright smoke test (`app/e2e/engine-smoke.spec.ts`) against the production build: passes. Vitest 47/47, typecheck, production build all green.
+- **CI:** the shell job now builds the bindings first (the shell imports them) and runs the browser E2E.
+- **Dependency:** `@playwright/test` (dev only) registered in `dependencies.md`.
+
 ## 2026-10-11 — Task 018: WebGL2 parity tiers (ADR-010) and text shaping (ADR-011)
 
 - **ADR-010 ACCEPTED:** WebGPU = T1 reference; WebGL2 = T2 parity for core canvas features; T3 = declared degraded fallbacks with a visible badge. Shared renderer path is render-only (WebGL2 has no compute and no storage buffers).
