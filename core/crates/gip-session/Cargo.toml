@@ -1,0 +1,30 @@
+[package]
+name = "gip-session"
+description = "Gipulo engine facade + wasm-bindgen boundary. Contract: docs/architecture/engine-core.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+# cdylib = the WebAssembly module (wasm-pack); rlib = native tests/tools (cargo test).
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+gip-document = { path = "../gip-document" }
+gip-coords = { path = "../gip-coords" }
+gip-geometry = { path = "../gip-geometry" }
+gip-layout = { path = "../gip-layout" }
+gip-text = { path = "../gip-text" }
+gip-history = { path = "../gip-history" }
+gip-scene = { path = "../gip-scene" }
+gip-render = { path = "../gip-render" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.129"
+# wasm-bindgen is added via `cargo add wasm-bindgen --target ... -p gip-session` — the
+# registry-approved boundary transport (docs/architecture/dependencies.md §3; engine-core.md §3).

@@ -1,0 +1,136 @@
+{
+  "format": "gip",
+  "version": 1,
+  "meta": {
+    "name": "Sample",
+    "docSalt": "0000000000ab12cd",
+    "nextId": "0000000000000006",
+    "appVersion": "0.0.0",
+    "documentHash": null
+  },
+  "document": {
+    "pages": [
+      {
+        "id": "ab12cd0000000001",
+        "name": "Page 1",
+        "children": [
+          "ab12cd0000000002"
+        ]
+      }
+    ],
+    "nodes": {
+      "ab12cd0000000002": {
+        "kind": "frame",
+        "name": "Card",
+        "transform": {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 320.0,
+          "h": 200.0,
+          "rotation": 0.0,
+          "flipH": false,
+          "flipV": false
+        },
+        "opacity": 1.0,
+        "visible": true,
+        "locked": false,
+        "children": [
+          "ab12cd0000000003",
+          "ab12cd0000000004"
+        ],
+        "path": null,
+        "x-future": {
+          "keep": [
+            1,
+            2.5
+          ]
+        }
+      },
+      "ab12cd0000000003": {
+        "kind": "rectangle",
+        "name": "Surface",
+        "transform": {
+          "x": 8.0,
+          "y": 8.0,
+          "w": 0.1,
+          "h": 303.0,
+          "rotation": 33.7,
+          "flipH": false,
+          "flipV": false
+        },
+        "opacity": 0.5,
+        "visible": true,
+        "locked": false,
+        "children": [],
+        "path": null
+      },
+      "ab12cd0000000004": {
+        "kind": "vector-path",
+        "name": "Edge",
+        "transform": {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "rotation": 0.0,
+          "flipH": false,
+          "flipV": false
+        },
+        "opacity": 1.0,
+        "visible": true,
+        "locked": false,
+        "children": [],
+        "path": {
+          "subpaths": [
+            {
+              "vertices": [
+                {
+                  "anchor": [
+                    0.0,
+                    0.0
+                  ],
+                  "handleIn": [
+                    0.0,
+                    0.0
+                  ],
+                  "handleOut": [
+                    0.0,
+                    0.0
+                  ],
+                  "pointType": "corner",
+                  "handleMode": "disconnected"
+                },
+                {
+                  "anchor": [
+                    0.3333333333333333,
+                    5e-324
+                  ],
+                  "handleIn": [
+                    0.3333333333333333,
+                    5e-324
+                  ],
+                  "handleOut": [
+                    0.3333333333333333,
+                    5e-324
+                  ],
+                  "pointType": "corner",
+                  "handleMode": "disconnected"
+                }
+              ],
+              "closed": true
+            }
+          ],
+          "fillRule": "nonZero"
+        }
+      }
+    }
+  },
+  "assets": {
+    "ab12cd0000000005": {
+      "hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "kind": "image",
+      "bytes": 4096,
+      "missing": false
+    }
+  }
+}

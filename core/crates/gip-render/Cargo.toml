@@ -1,0 +1,21 @@
+[package]
+name = "gip-render"
+description = "Gipulo renderer (wgpu): document + overlay layers, export. Contract: docs/architecture/rendering.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gip-document = { path = "../gip-document" }
+gip-geometry = { path = "../gip-geometry" }
+gip-coords = { path = "../gip-coords" }
+gip-scene = { path = "../gip-scene" }
+wgpu = "30.0.1"
+# wgpu is added via `cargo add wgpu -p gip-render` — the registry-approved graphics
+# abstraction (docs/architecture/dependencies.md §3; ADR-001). It is the ONLY crate allowed
+# to depend on it (scripts/check-boundaries.py enforces this).

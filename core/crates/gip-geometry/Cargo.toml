@@ -1,0 +1,15 @@
+[package]
+name = "gip-geometry"
+description = "Gipulo vector/geometry engine: paths, bounds, ops, spatial index. Contract: docs/architecture/vector-engine.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gip-document = { path = "../gip-document" }
+gip-coords = { path = "../gip-coords" }

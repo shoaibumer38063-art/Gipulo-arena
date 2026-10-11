@@ -1,0 +1,29 @@
+# Gipulo engine core — Rust workspace (ADR-001 ACCEPTED, Option B).
+#
+# Dependency law: docs/architecture/engine-core.md + docs/architecture/dependencies.md.
+# Enforced by scripts/check-boundaries.py (run in CI). Do not add a dependency without a
+# registry entry (CQ1.4 — no dependency without written justification).
+
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.88"
+license = "UNLICENSED"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"       # memory safety is a founding rationale for Rust (ADR-001)
+missing_docs = "warn"        # public items document their contract + rule IDs
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }   # group priority so specific lints can override
+dbg_macro = "deny"
+print_stdout = "warn"        # core logging goes through structured logging (added later)
+
+[profile.dev]
+debug = 0                    # the wgpu dependency graph is large; keep cold builds fast

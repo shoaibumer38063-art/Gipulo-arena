@@ -1,0 +1,14 @@
+[package]
+name = "gip-history"
+description = "Gipulo transactions, undo/redo. Contract: docs/architecture/undo-redo.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gip-document = { path = "../gip-document" }
