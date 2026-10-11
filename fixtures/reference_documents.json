@@ -1,0 +1,72 @@
+{
+  "_comment": "Reference documents for the performance budget suite (rules/canvas.md §26; performance P3). These five are the ONLY legitimate measurement surfaces. Concrete structural parameters are [PROPOSED] until the budget-suite implementation ADR confirms them; the categories themselves are law.",
+  "_status": "spec-only — generator emits .gip files once the format v0 exists (ADR-003)",
+  "budgets": {
+    "open": "<= 3s for any reference document",
+    "pan_zoom_drag": ">= 60fps sustained; p95 frame time <= 32ms",
+    "pointer_to_visual": "<= 2 frames",
+    "snap_compute": "<= 2ms per candidate set",
+    "save": "<= 1s serialize",
+    "memory": "<= 1.5GB live",
+    "_source": "rules/canvas.md §26 (PROPOSED values are binding defaults until ADR confirmation)"
+  },
+  "documents": [
+    {
+      "id": "nodes-10k",
+      "purpose": "raw node-count scale — culling, painting, selection, panel virtualization",
+      "structure": {
+        "total_nodes": 10000,
+        "layout": "10x10 grid of frames, each holding 100 mixed nodes (rect / ellipse / text)",
+        "vector_content": "light (shape primitives only)",
+        "effects": "none",
+        "images": "none"
+      },
+      "exercises": ["open time", "pan/zoom fps", "marquee over thousands", "properties panel with huge selection"]
+    },
+    {
+      "id": "vector-1k-points",
+      "purpose": "editable vector scale — geometry ops, hit-testing precision, editing responsiveness",
+      "structure": {
+        "hero_path": "single editable vector with 1000 points (mixed corner/smooth, both handle modes)",
+        "extra_paths": "20 paths of 100 points each",
+        "curves": "cubic segments majority, some degenerate (zero-length, coincident points)",
+        "booleans": "2 boolean groups over 50-point operands"
+      },
+      "exercises": ["open time", "point/segment editing latency", "boolean compute budget", "hit-testing precision at zoom extremes"]
+    },
+    {
+      "id": "frames-500-images",
+      "purpose": "media lifecycle + batching — texture management, off-screen release, draw-call proportionality",
+      "structure": {
+        "frames": 500,
+        "images": "1 image instance per frame (500 references to a small pool of cached assets)",
+        "video": "2 video nodes (one visible, one off-screen)",
+        "scrolling": "layout arranged so panning crosses frame boundaries constantly"
+      },
+      "exercises": ["pan fps with media", "texture memory ceiling", "off-screen video release", "open time"]
+    },
+    {
+      "id": "deep-nesting",
+      "purpose": "matrix accumulation + subtree-scoped invalidation without recursion blowups",
+      "structure": {
+        "chains": 20,
+        "depth_per_chain": 20,
+        "content_per_leaf": "1 rect + 1 text",
+        "transforms": "rotation + fractional translation at every level (float precision stress)"
+      },
+      "exercises": ["coordinate round-trip accuracy (CAN-COORD invariant)", "edit-in-deep-leaf latency", "invalidation scope (L5)"]
+    },
+    {
+      "id": "effects-heavy",
+      "purpose": "effect pipeline + visual-bounds caching — blur/shadow costs, effect isolation, zoom LOD",
+      "structure": {
+        "blurred_nodes": 100,
+        "shadow_nodes": 200,
+        "stacking": "blurred containers holding shadowed children (nested effect isolation)",
+        "blend_modes": "a mix of normal + multiply + screen nodes",
+        "fill_complexity": "gradients on half of the nodes"
+      },
+      "exercises": ["pan/zoom fps with effects", "effect-failure isolation (fault injection)", "visual-bounds cache efficiency", "zoom LOD behavior"]
+    }
+  ]
+}

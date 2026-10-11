@@ -1,0 +1,76 @@
+/* Field — docs/design-system/05_components_controls.md §3. */
+
+.gip-field {
+  display: inline-flex;
+  align-items: center;
+  height: var(--field-h);
+  background: var(--bg-input);
+  border: var(--stroke-default) solid transparent;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+}
+
+.gip-field:hover:not(.is-disabled) {
+  border-color: var(--border-strong);
+}
+
+.gip-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 var(--stroke-hair) var(--accent);
+}
+
+.gip-field.is-invalid {
+  border-color: var(--danger);
+}
+
+.gip-field.is-disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-field__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 100%;
+  flex: none;
+  color: var(--text-secondary);
+  font: var(--type-body-medium);
+  user-select: none;
+}
+
+.gip-field.is-scrubbable .gip-field__label {
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.gip-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 var(--space-4) 0 var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--type-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.gip-field__label + .gip-field__input {
+  padding-left: 0;
+}
+
+.gip-field__input:focus {
+  outline: none;
+}
+
+/* Mixed placeholder is intentionally readable (07 §8) — never dimmed. */
+.gip-field.is-mixed .gip-field__input::placeholder {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.gip-field__input::placeholder {
+  color: var(--text-tertiary);
+}

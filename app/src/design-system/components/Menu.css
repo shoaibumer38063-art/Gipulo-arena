@@ -1,0 +1,95 @@
+/* Menu — docs/design-system/06_components_surfaces.md §1. */
+
+.gip-menu {
+  width: 224px;
+  padding: var(--space-4);
+  border: var(--stroke-default) solid var(--menu-border);
+  border-radius: var(--radius-l);
+  background: var(--menu-bg);
+  box-shadow: var(--shadow-menu);
+  outline: none;
+  z-index: var(--z-menu);
+}
+
+.gip-menu--sub {
+  position: absolute;
+  left: calc(100% - 4px);
+  top: -9px;
+}
+
+.gip-menu__itemWrap {
+  position: relative;
+}
+
+.gip-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: var(--menu-item-h);
+  padding: 0 var(--space-4) 0 0;
+  border: none;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--menu-text);
+  font: var(--type-body);
+  text-align: left;
+  transition:
+    background-color var(--motion-hover) var(--ease-standard),
+    color var(--motion-hover) var(--ease-standard);
+}
+
+.gip-menu__item:disabled {
+  opacity: var(--opacity-disabled);
+}
+
+/* accent hover language applies to keyboard-active items too (06 §1) */
+.gip-menu__item:hover:not(:disabled),
+.gip-menu__item.is-active:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.gip-menu__item.is-destructive:not(:disabled) {
+  color: var(--danger);
+}
+.gip-menu__item.is-destructive:hover:not(:disabled),
+.gip-menu__item.is-destructive.is-active:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
+}
+
+.gip-menu__gutter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex: none;
+  color: inherit;
+}
+
+.gip-menu__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gip-menu__shortcut {
+  flex: none;
+  opacity: var(--opacity-shortcut);
+  font: var(--type-body);
+}
+
+.gip-menu__subArrow {
+  flex: none;
+  display: inline-flex;
+  opacity: var(--opacity-muted);
+}
+
+.gip-menu__separator {
+  height: 1px;
+  margin: var(--space-2) calc(-1 * var(--space-4));
+  background: var(--menu-sep);
+}

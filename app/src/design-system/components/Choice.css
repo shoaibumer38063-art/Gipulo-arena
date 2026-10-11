@@ -1,0 +1,97 @@
+/* Checkbox & Radio — docs/design-system/05_components_controls.md §6. */
+
+.gip-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gip-choice.is-disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-choice__control {
+  position: relative;
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.gip-choice__control input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: default;
+}
+
+.gip-choice__control input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: var(--radius-s);
+}
+
+.gip-choice__visual {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #fff;
+}
+
+/* checkbox box */
+.gip-choice__control--checkbox .gip-choice__visual {
+  border: var(--stroke-default) solid var(--border-strong);
+  border-radius: var(--radius-s);
+  background: transparent;
+  transition:
+    background-color var(--motion-toggle) var(--ease-standard),
+    border-color var(--motion-toggle) var(--ease-standard);
+}
+
+.gip-choice__control--checkbox .gip-choice__visual svg {
+  opacity: 0;
+  transition: opacity var(--motion-toggle) var(--ease-standard);
+}
+
+.gip-choice__control--checkbox input:checked + .gip-choice__visual,
+.gip-choice__control--checkbox input:indeterminate + .gip-choice__visual {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.gip-choice__control--checkbox input:checked + .gip-choice__visual svg,
+.gip-choice__control--checkbox input:indeterminate + .gip-choice__visual svg {
+  opacity: 1;
+}
+
+.gip-choice__control--checkbox input:not(:checked):hover + .gip-choice__visual {
+  border-color: var(--accent);
+}
+
+/* radio donut (checked = 5px accent border — 05 §6) */
+.gip-choice__control--radio .gip-choice__visual {
+  border: var(--stroke-default) solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-panel);
+  transition: border var(--motion-toggle) var(--ease-standard);
+}
+
+.gip-choice__control--radio input:checked + .gip-choice__visual {
+  border: 5px solid var(--accent);
+}
+
+.gip-choice__control--radio input:not(:checked):hover + .gip-choice__visual {
+  border-color: var(--accent);
+}
+
+.gip-choice__label {
+  font: var(--type-body);
+  color: var(--text-primary);
+}

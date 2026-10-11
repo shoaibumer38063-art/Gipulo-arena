@@ -1,0 +1,83 @@
+# Gipulo CI — real gates from day one (ADR-001, engine-core.md §9).
+#
+# Jobs:
+#   core   — Rust: formatting, clippy (warnings denied), native tests, dependency law
+#   wasm   — wasm compatibility + generated bindings build (never committed)
+#   shell  — TypeScript/React: typecheck, unit tests, production build
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: core · fmt · clippy · tests · boundaries
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - name: Formatting
+        run: cargo fmt --all -- --check
+      - name: Clippy (warnings denied)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Tests (native — the majority of engine tests)
+        run: cargo test --workspace
+      - name: Dependency-law check
+        working-directory: .
+        run: python3 scripts/check-boundaries.py
+
+  wasm:
+    name: wasm · compatibility · bindings build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      - uses: taiki-e/install-action@wasm-pack
+      - name: Wasm compatibility check
+        working-directory: core
+        run: cargo check -p gip-session --target wasm32-unknown-unknown
+      - name: Build bindings (generated — never committed)
+        run: ./scripts/build-wasm.sh
+      - name: Verify bindings artifact
+        run: test -f bindings/pkg/gip_engine_bg.wasm
+
+  shell:
+    name: shell · typecheck · tests · build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install (locked)
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build

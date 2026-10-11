@@ -1,0 +1,213 @@
+/*
+ * Gipulo Design System — token layer (THE numeric source of truth in code).
+ *
+ * Every value here comes from docs/design-system/02_tokens.md (which traces to the Design
+ * System HTML reference). Consumers may ONLY use `var(--token)` — rules/ui.md UI1 forbids
+ * inline values. tokens.ts mirrors this file for TypeScript; tokens.test.ts fails if the two
+ * ever drift.
+ *
+ * Themes: light = :root · dark = [data-theme="dark"] or the OS preference (unless forced
+ * light). Guide/identity colors are theme-invariant (02 §1.4).
+ */
+
+/* ------------------------------------------------------------------ fonts */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-var.woff2') format('woff2');
+}
+
+/* ------------------------------------------------------------------ light (default) */
+:root {
+  /* type */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --type-title: 600 13px/20px var(--font-ui);
+  --type-section: 600 11px/16px var(--font-ui);
+  --type-body: 450 11px/16px var(--font-ui);
+  --type-body-medium: 500 11px/16px var(--font-ui);
+  --type-caption: 500 10px/16px var(--font-ui);
+  --type-code: 500 10px/14px var(--font-mono);
+  --type-pill: 500 10px/14px var(--font-ui);
+  --ls-caption: 0.02em;
+
+  /* surfaces */
+  --bg-canvas: #f5f5f5;
+  --bg-panel: #fff;
+  --bg-input: #f5f5f5;
+  --bg-hover: rgba(0, 0, 0, 0.06);
+  --bg-selected: #e5f4ff;
+  --frame-bg: #fff;
+  --toolbar-bg: #2c2c2c;
+  --tip-bg: #1e1e1e;
+  --menu-bg: #fff;
+  --menu-text: rgba(0, 0, 0, 0.9);
+  --menu-sep: rgba(0, 0, 0, 0.1);
+  --menu-border: rgba(0, 0, 0, 0.08);
+
+  /* text */
+  --text-primary: rgba(0, 0, 0, 0.9);
+  --text-secondary: rgba(0, 0, 0, 0.5);
+  --text-tertiary: rgba(0, 0, 0, 0.3);
+
+  /* borders */
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-focus: var(--accent);
+
+  /* identity + status (theme-invariant except where noted) */
+  --accent: #0d99ff;
+  --accent-hi: #2aa7ff;
+  --accent-hover-fuel: #4db8ff; /* primary-button hover gradient top (07 §7) */
+  --accent-lo: #0b82dc;
+  --danger: #f24822;
+  --danger-text: #c93a17; /* [PROPOSED] small-text-safe error text (11 §2) */
+  --success: #14ae5c;
+  --warning: #ffb800;
+  --component: #9747ff;
+  --selection-fill: rgba(13, 153, 255, 0.3);
+  --brand-gradient: conic-gradient(from 200deg, #0d99ff, #9747ff, #ec2fd0, #0d99ff);
+
+  /* canvas guide language (CLOSED — docs/design-system/08_canvas_ui.md §9) */
+  --guide-geometry: #0d99ff;
+  --guide-spacing: #ec2fd0;
+  --guide-snap: #ff8a00;
+  --guide-ruler: #f24822;
+
+  /* spacing (4px grid) */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 24px;
+  --space-8: 32px;
+
+  /* radii */
+  --radius-xs: 2px;
+  --radius-s: 3px;
+  --radius-m: 5px;
+  --radius-logo: 6px;
+  --radius-toast: 8px;
+  --radius-pill: 10px;
+  --radius-l: 13px;
+
+  /* strokes */
+  --stroke-hair: 0.5px;
+  --stroke-default: 1px;
+  --stroke-strong: 2px;
+  --stroke-canvas-path: 1.5px;
+  --stroke-handle-line: 0.75px;
+  --stroke-halo: 3px;
+
+  /* elevation */
+  --shadow-elevation: 0 0 0.5px rgba(0, 0, 0, 0.3), 0 10px 16px rgba(0, 0, 0, 0.12),
+    0 2px 5px rgba(0, 0, 0, 0.15);
+  --shadow-menu: var(--shadow-elevation);
+  --shadow-button: 0 1px 1px rgba(0, 0, 0, 0.15);
+  --shadow-segment: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  /* opacity laws */
+  --opacity-disabled: 0.4;
+  --opacity-hidden-row: 0.45;
+  --opacity-muted: 0.6;
+  --opacity-shortcut: 0.5;
+  --opacity-inactive: 0.35;
+
+  /* motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-hover: 80ms;
+  --motion-toggle: 120ms;
+  --motion-menu: 160ms;
+  --motion-snap-release: 120ms;
+
+  /* z-layers (02 §9) */
+  --z-overlay: 100;
+  --z-pill: 200;
+  --z-floating: 300;
+  --z-panel: 400;
+  --z-popover: 500;
+  --z-menu: 600;
+  --z-dialog: 700;
+  --z-toast: 800;
+  --z-tooltip: 900;
+
+  /* density, control metrics, icon sizes */
+  --density-ultra: 20px;
+  --density-compact: 24px;
+  --density-comfortable: 28px;
+  --hit-min: 24px;
+  --control-h: 24px;
+  --field-h: 28px;
+  --row-h: 28px;
+  --menu-item-h: 24px;
+  --tab-h: 40px;
+  --toolbar-h: 40px;
+  --tool-h: 32px;
+  --logo-size: 24px;
+  --panel-w: 240px;
+  --panel-w-min: 200px;
+  --panel-w-max: 480px;
+  --indent-step: 16px;
+  --indent-deep-step: 8px;
+  --scrollbar-size: 10px;
+  --icon-size: 16px;
+  --icon-size-sm: 12px;
+}
+
+/* ------------------------------------------------------------------ dark */
+[data-theme='dark'] {
+  --bg-canvas: #1e1e1e;
+  --bg-panel: #2c2c2c;
+  --bg-input: #383838;
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  --bg-selected: #0a3a5e;
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.25);
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-tertiary: rgba(255, 255, 255, 0.3);
+  --frame-bg: #2c2c2c;
+  --menu-bg: #1e1e1e;
+  --menu-text: #fff;
+  --menu-sep: rgba(255, 255, 255, 0.14);
+  --menu-border: rgba(255, 255, 255, 0.12);
+  --danger-text: #ff9d85; /* [PROPOSED] dark pair of --danger-text */
+  --shadow-elevation: 0 0 0.5px #000, 0 10px 16px rgba(0, 0, 0, 0.4), 0 2px 5px rgba(0, 0, 0, 0.5);
+  --shadow-menu: var(--shadow-elevation);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-canvas: #1e1e1e;
+    --bg-panel: #2c2c2c;
+    --bg-input: #383838;
+    --bg-hover: rgba(255, 255, 255, 0.1);
+    --bg-selected: #0a3a5e;
+    --border-default: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.25);
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-tertiary: rgba(255, 255, 255, 0.3);
+    --frame-bg: #2c2c2c;
+    --menu-bg: #1e1e1e;
+    --menu-text: #fff;
+    --menu-sep: rgba(255, 255, 255, 0.14);
+    --menu-border: rgba(255, 255, 255, 0.12);
+    --danger-text: #ff9d85;
+    --shadow-elevation: 0 0 0.5px #000, 0 10px 16px rgba(0, 0, 0, 0.4),
+      0 2px 5px rgba(0, 0, 0, 0.5);
+    --shadow-menu: var(--shadow-elevation);
+  }
+}

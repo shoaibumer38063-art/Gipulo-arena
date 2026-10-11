@@ -1,0 +1,87 @@
+/*
+ * Gipulo Design System — global resets and editor defaults.
+ *
+ * This file implements the "no cheap browser defaults" checklist (docs/design-system/
+ * 01_foundations.md §3): custom text selection, focus rings, scrollbars, reduced motion.
+ * Imported once by the shell entry point.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Custom text selection — never the browser blue (01 §3). */
+::selection {
+  background: var(--selection-fill);
+  color: inherit;
+}
+
+/* Focus: Gipulo ring, never the OS outline (02 §5). Components with adjacent surfaces
+   override with the double-ring variant (05 §1). */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: var(--radius-s);
+}
+
+/* DS scrollbars (06 §12). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 5px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-tertiary);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Buttons never use the accidental browser cursor (01 §3). */
+button {
+  cursor: default;
+}
+
+/* Reduced motion is a full stop (10 §2.5). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

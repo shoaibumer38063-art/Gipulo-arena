@@ -1,0 +1,31 @@
+/* PropertyRow — docs/design-system/06_components_surfaces.md §8. */
+
+.gip-prop-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--row-h);
+}
+
+.gip-prop-row.is-disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-prop-row__label {
+  flex: none;
+  width: 72px;
+  color: var(--text-secondary);
+  font: var(--type-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gip-prop-row__control {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

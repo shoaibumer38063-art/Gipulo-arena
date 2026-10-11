@@ -1,0 +1,28 @@
+/* Tooltip — docs/design-system/06_components_surfaces.md §4. */
+
+.gip-tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.gip-tooltip {
+  position: absolute;
+  bottom: calc(100% + var(--space-4));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-tooltip);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 5px 8px;
+  border-radius: var(--radius-m);
+  background: var(--tip-bg);
+  color: #fff;
+  font: var(--type-body);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.gip-tooltip__shortcut {
+  opacity: var(--opacity-shortcut);
+}

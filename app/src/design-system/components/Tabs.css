@@ -1,0 +1,43 @@
+/* Tabs — docs/design-system/06_components_surfaces.md §6. */
+
+.gip-tabs {
+  display: flex;
+  gap: var(--space-6);
+  padding: 0 var(--space-6);
+  border-bottom: var(--stroke-default) solid var(--border-default);
+}
+
+.gip-tabs__tab {
+  position: relative;
+  height: var(--tab-h);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--type-body-medium);
+  transition: color var(--motion-hover) var(--ease-standard);
+}
+
+.gip-tabs__tab:hover {
+  color: var(--text-primary);
+}
+
+.gip-tabs__tab.is-active {
+  color: var(--text-primary);
+}
+
+.gip-tabs__tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.gip-tabs__tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+  border-radius: var(--radius-s);
+}

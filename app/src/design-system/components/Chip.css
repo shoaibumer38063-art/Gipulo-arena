@@ -1,0 +1,32 @@
+/* Chip — docs/design-system/06_components_surfaces.md §11. */
+
+.gip-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font: var(--type-body);
+}
+
+.gip-chip.is-active {
+  background: var(--bg-selected);
+  color: var(--accent);
+}
+
+.gip-chip.is-error {
+  background: #fde8e3;
+  color: var(--danger-text);
+}
+
+[data-theme='dark'] .gip-chip.is-error {
+  background: rgba(242, 72, 34, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .gip-chip.is-error {
+    background: rgba(242, 72, 34, 0.18);
+  }
+}

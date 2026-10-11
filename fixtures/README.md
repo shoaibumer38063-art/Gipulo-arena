@@ -1,0 +1,24 @@
+# Performance Fixtures — the ONLY measurement surfaces
+
+Per `rules/canvas.md` §26 and `rules/performance.md` (P3): the budget suite runs against these
+five reference documents, and **empty-canvas measurements are inadmissible**. They are the
+registration test for every renderer/geometry/layout change.
+
+## Lifecycle
+
+1. **Now (scaffold):** `reference_documents.json` defines each document's structural targets as
+   machine-readable spec. Concrete parameters are `[PROPOSED]` until the budget-suite
+   implementation confirms them.
+2. **When `.gip` format v0 exists (ADR-003):** a deterministic generator emits the five
+   documents as `.gip` files (seeded, byte-stable — they are golden artifacts too).
+3. **Budget suite (CI + local):** opens each document and measures against the canvas §26
+   budgets (open ≤3s · pan/zoom/drag ≥60fps with p95 frames ≤32ms · pointer→visual ≤2 frames ·
+   snap compute ≤2ms · save ≤1s · memory ≤1.5GB). Regressions block completion (P6).
+
+## Rules for fixtures
+
+- Fixtures are versioned WITH the `.gip` schema: a schema migration regenerates or migrates them
+  in the same task (file-format.md invariants).
+- No fixture may be editor-produced by hand — they are generated, deterministic, and checked in.
+- A new feature that could plausibly affect budgets adds or extends a fixture (feature-addition
+  step 6: affected-systems list must say which fixtures are relevant).

@@ -1,0 +1,45 @@
+/* Segmented — docs/design-system/05_components_controls.md §2. */
+
+.gip-segmented {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: 2px;
+  border-radius: var(--radius-m);
+  background: var(--bg-input);
+}
+
+.gip-segmented.is-disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-segmented__segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 22px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--type-body);
+  transition: color var(--motion-hover) var(--ease-standard);
+}
+
+.gip-segmented__segment:hover:not(.is-active) {
+  color: var(--text-primary);
+}
+
+.gip-segmented__segment.is-active {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow:
+    0 0 0 var(--stroke-hair) var(--border-strong),
+    var(--shadow-segment);
+}
+
+.gip-segmented__segment:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

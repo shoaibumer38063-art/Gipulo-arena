@@ -1,0 +1,44 @@
+/* Toggle — docs/design-system/05_components_controls.md §5. */
+
+.gip-toggle {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--border-strong);
+  transition: background-color var(--motion-toggle) var(--ease-standard);
+}
+
+.gip-toggle:disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-toggle.is-on {
+  background: var(--accent);
+}
+
+.gip-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  transition: transform var(--motion-toggle) var(--ease-standard);
+}
+
+.gip-toggle.is-on .gip-toggle__knob {
+  transform: translateX(12px);
+}
+
+.gip-toggle:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg-panel),
+    0 0 0 4px var(--accent);
+}

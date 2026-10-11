@@ -1,0 +1,53 @@
+/* Slider — docs/design-system/05_components_controls.md §7. */
+
+.gip-slider {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-width: 80px;
+  height: 24px;
+  touch-action: none;
+}
+
+.gip-slider.is-disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+.gip-slider__track {
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border-strong);
+}
+
+.gip-slider__fill {
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.gip-slider__knob {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 var(--stroke-hair) rgba(0, 0, 0, 0.2),
+    var(--shadow-knob);
+  transform: translateY(-50%);
+}
+
+.gip-slider:focus-visible {
+  outline: none;
+}
+
+.gip-slider:focus-visible .gip-slider__knob {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    var(--shadow-knob);
+}
