@@ -148,7 +148,7 @@ Recorded when `gip-document` was built. These refine, and where stated replace, 
   is an error, not silent data loss. Reason: the surface stays bounded and auditable.
 - **A3 — Asset ids share the lineage id space.** They use the same salt/counter rules, must be below
   `nextId`, and must not collide with any node or page id.
-- **A4 — `documentHash` is written as `null` until its hashing dependency is registered.** It is
+- **A4 — (CLOSED by ADR-009, 2026-10-11) `documentHash` is written as SHA-256 on save; the hashing dependency is registered.** Originally: it is
   never silently omitted; SHA-256 is a separate dependency decision.
 - **A5 — Serialization is validate-then-write.** `to_json` validates before writing, so NaN/Inf
   (which serde_json would write as `null`) can never reach disk. Numbers use `float_roundtrip`

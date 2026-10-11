@@ -23,6 +23,7 @@ pub mod node;
 pub mod path;
 pub mod transform;
 
+mod integrity;
 #[cfg(test)]
 mod serial_tests;
 

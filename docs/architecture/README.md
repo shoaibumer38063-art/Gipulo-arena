@@ -63,6 +63,7 @@ understand why it existed.
 | `ADR-006-path-model.md` | Canonical path model: cubic-only segments, vertex = anchor + absolute handles, explicit closed flag and fill rule, straight-segment data definition; path DATA in `gip-document`, OPERATIONS in `gip-geometry` | **PROPOSED (2026-10-11)** — binding as implementation default |
 | ADR-005 (queued) | RVS affordance colors (required before Responsive Vector Segments ship) — reserved color language decided in `docs/design-system/08_canvas_ui.md` §8 | queued |
 | `ADR-005-rvs-affordance.md` | RVS affordances: eligible = magenta (guide/spacing) with dot; activated = success green with count pill; red stays reserved for rulers | **ACCEPTED (2026-10-11, owner delegation)** — reversible by superseding ADR |
+| `ADR-009-document-hash-and-nfc.md` | documentHash = SHA-256 of the document section (written on save, verified on load); strings must be NFC (rejected, never rewritten); deps sha2 + unicode-normalization | **ACCEPTED (2026-10-11, owner delegation)** |
 | `ADR-008-recovery-and-integrity.md` | P0-class: trap recovery from committed whole-file snapshots; autosave cadence (2 s debounce, 30 s max); 3 generations; telemetry-free local diagnostics; fault-injection feature (release-excluded) | **PROPOSED (2026-10-11)** — owner review on cadence, retention, clean-close, copy |
 
 Full requirements: `../memory/03_documentation_system.md` §6–7.

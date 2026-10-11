@@ -38,7 +38,7 @@ Rationale: layer-1 crates stay dependency-free so the geometry/document/math tru
 headless-testable, and immune to ecosystem churn; wgpu sits behind the only crate that may draw;
 the facade is the only boundary. Violations fail CI with the exact edge named.
 
-**One deliberate exception (ADR-003, PROPOSED 2026-10-11):** `gip-document` may depend on
+**Registered exceptions for `gip-document` (ADR-009 extends ADR-003):** `sha2` and `unicode-normalization` join serde/serde_json (documentHash and NFC). Earlier text: `gip-document` may depend on
 `serde` (derive) + `serde_json` for schema serialization. Justification: the schema is the serialization contract (CQ5 single definition), serde derive is compile-time only, and serde_json used purely as a function library preserves the purity/headless-testing rationale. Hand-rolling JSON to keep the letter of "zero external" would trade a trusted audit target for maintenance burden — not a good trade. Any further layer-1 exception requires its own registered decision (same process as any new dependency).
 
 ## 3. External dependency registry (resolved versions, 2026-10-11)
@@ -50,6 +50,9 @@ the facade is the only boundary. Violations fail CI with the exact edge named.
 | `wgpu` (+ `naga`) | 30.0.1 | `gip-render` only | The graphics abstraction itself: browser WebGPU pass-through + WebGL2 via Naga WGSL→GLSL (ADR-001; rendering rules R1). Major-version bumps: note in task summary + full budget suite run (renderer is budget-critical). |
 | `wasm-bindgen` | 0.2.129 | `gip-session` (wasm32 only) | The boundary transport (engine-core.md §3): intents down, events/snapshots up. Generated code never hand-edited. |
 | `serde` 1.0.229 + `serde_json` 1.0.152 *(pinned by Cargo.lock; document phase)* | `gip-document` | ADR-003: the schema IS the serialization contract — derive-based (compile-time) with serde_json as a pure function library; shortest-round-trip f64 via ryu. The single deliberate layer-1 exception (§2). |
+
+| `sha2` 0.11 | `gip-document` | ADR-009: documentHash = SHA-256 over the canonical document section. Pure Rust (RustCrypto), no I/O, wasm-compatible; hand-rolled crypto is forbidden. |
+| `unicode-normalization` 0.1 | `gip-document` | ADR-009: NFC check on every string (ADR-003 #2). Pure Rust Unicode tables; checks only, never rewrites strings. |
 
 ### Shell
 

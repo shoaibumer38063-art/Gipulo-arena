@@ -10,6 +10,7 @@ use crate::document::Document;
 use crate::document::Page;
 use crate::error::GipError;
 use crate::id::{AssetId, NodeId, hex64};
+use crate::integrity::{check_nfc, document_hash};
 
 /// Format tag written in every file.
 pub const FORMAT_TAG: &str = "gip";
@@ -210,7 +211,10 @@ const MIGRATIONS: &[(u32, MigrationStep)] = &[];
 /// Returns the first validation failure, or a serialization error.
 pub fn to_json(file: &GipFile) -> Result<String, GipError> {
     file.validate()?;
-    let mut text = serde_json::to_string_pretty(file)?;
+    check_nfc(&serde_json::to_value(file)?)?;
+    let mut stamped = file.clone();
+    stamped.meta.document_hash = Some(document_hash(&file.document)?);
+    let mut text = serde_json::to_string_pretty(&stamped)?;
     text.push('\n');
     Ok(text)
 }
@@ -248,7 +252,13 @@ pub fn from_json(text: &str) -> Result<GipFile, GipError> {
         version += 1;
         value["version"] = serde_json::Value::from(version);
     }
+    check_nfc(&value)?;
     let file: GipFile = serde_json::from_value(value)?;
     file.validate()?;
+    if let Some(stored) = &file.meta.document_hash
+        && *stored != document_hash(&file.document)?
+    {
+        return Err(GipError::Invalid("document hash mismatch".into()));
+    }
     Ok(file)
 }

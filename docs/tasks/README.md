@@ -28,6 +28,7 @@ Entries so far:
 - `2026-10-11_005_repo-scaffold.md` — repo scaffold: core crates, shell, wasm pipeline, CI, fixtures (zero editor features).
 - `2026-10-11_006_design_system_formalization.md` — 14 Design System docs: tokens, components with all states, canvas UI + closed guide-color language, cursors, motion, a11y audit, responsive, research notes.
 - `2026-10-11_007_design_system_implementation.md` — DS code v1: drift-tested token layer, 17 registry entries (15 components + tokens + scrollbar) with 47 state tests, gallery story page, editor-frame demo.
+- `2026-10-11_017_document_hash_nfc.md` — ADR-009: documentHash (SHA-256) written and verified; NFC enforced on save/load. Deps sha2 + unicode-normalization registered.
 - `2026-10-11_015_rvs_affordance.md` — ADR-005 accepted under owner delegation: RVS uses magenta (eligible) and success green (activated) with shape cues; red stays for rulers. Docs-only.
 - `2026-10-11_014_recovery_policy.md` — ADR-008 (P0-class, PROPOSED): trap recovery from committed whole-file snapshots; autosave cadence; 3 generations; local-only diagnostics; release-excluded fault injection. Docs-only; no code yet.
 - `2026-10-11_013_segment_index.md` — `gip-geometry::SegmentIndex` (ADR-007, PROPOSED): static BVH per path; equal to brute force; 1.13 ms vs 142 ms per query on a dense 1000-segment fixture (fixture-specific; caveat in ADR). 131 workspace tests green.

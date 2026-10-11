@@ -202,6 +202,13 @@ must be logged here with date, what changed, and why.
 
 - Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
 
+## 2026-10-11 — Task 017: documentHash (SHA-256) and NFC (ADR-009)
+
+- **What:** `gip-document` now writes `meta.documentHash` = SHA-256 of the canonical document section on save, verifies it on load (mismatch = invalid), and rejects any non-NFC string (keys and values) on save and load. New module `integrity.rs`; deps `sha2` 0.11 and `unicode-normalization` 0.1 registered in ADR-009 and the dependency registry; boundary allow-list updated.
+- **Golden:** `sample.gip` regenerated; the only diff is the `documentHash` line.
+- **Tests:** 138 workspace tests green (7 new in `tests/integrity.rs`); clippy, fmt, wasm, boundary checks clean.
+- **Closes:** ADR-003 A4; the documentHash + NFC items in the roadmap.
+
 ## 2026-10-11 — Task 015: RVS affordance language (ADR-005)
 
 - **What:** ADR-005 ACCEPTED under the owner's delegation: eligible segments = magenta (guide/spacing) + dot; activated = success green + count pill; context = blue dashed; red stays rulers-only. Closes the 08 §8 pending item.

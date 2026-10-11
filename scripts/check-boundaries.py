@@ -48,7 +48,7 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
 ALLOWED_EXTERNAL: dict[str, set[str]] = {
     "gip-render": {"wgpu"},          # R1 / ADR-001: the graphics abstraction itself.
     "gip-session": {"wasm-bindgen"}, # engine-core.md §3: the boundary transport.
-    "gip-document": {"serde", "serde_json"},  # ADR-003 (PROPOSED): schema serialization —
+    "gip-document": {"serde", "serde_json", "sha2", "unicode-normalization"},  # ADR-003 + ADR-009: schema serialization, documentHash, NFC —
     # compile-time derive + pure functions only; the document phase imports these. This is the
     # ONE deliberate exception to layer-1 zero-external-deps; any further exception needs its
     # own registered decision (registry §5).
