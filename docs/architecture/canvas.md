@@ -1,48 +1,104 @@
-# Canvas — Implementation Map
+# Canvas Architecture — THE HUB DOCUMENT
 
-> Status: ACTIVE for Slice 0a (2026-10-11, task 020). Binding rules: `rules/canvas.md` (read §0,
-> §3–§5, §7, §8, §11, §13, §22, §25–§28 before changing this map). This file maps the rules to code.
-> Update it in every canvas task.
+> Status: DESIGN v1 (2026-10-11). No code exists yet. Shaped by ADR-001 (ACCEPTED — Option B:
+> Rust/Wasm core + TS/React shell; placement law in `engine-core.md`).
+> Binding law: `rules/canvas.md` (CAN-*). This document maps the subsystems and their contracts;
+> each subsystem has its own architecture doc (linked below). Rules define behavior law; these
+> docs define structure — if they ever disagree, rules win and this doc is fixed.
 
-## 1. Where each responsibility lives
+## 1. Subsystem map (CAN-ARCH-1 realized as documents/modules)
 
-| Responsibility | Owner (code) | Rule |
+| Subsystem | Architecture doc | Primary rule sections |
 |---|---|---|
-| Coordinate conversions (screen ↔ viewport ↔ world) | `core/crates/gip-coords` (`viewport.rs`, `camera.rs`) | CAN-COORD-2 |
-| Camera (pan, zoom, clamp 2 %–4096 %) | `gip-coords::Camera` | CAN-CAM-1/2/3 |
-| Viewport rect and view state for the shell | `core/crates/gip-session/src/session.rs` (`Session`, `ViewSnapshot`) | CAN-CAM-5 |
-| Boundary transport (typed calls, plain structs) | `core/crates/gip-session/src/wasm.rs` (transport only) | engine-core §3, §10 |
-| Shell engine facade | `app/src/engine/client.ts` (only module that touches bindings) | engine-core §10 |
-| Canvas host (DOM element, raw input forwarding) | `app/src/canvas/CanvasHost.tsx` | CAN-INPUT-1 |
-| Canvas painting (pure functions) | `app/src/canvas/paint.ts` | CAN-SS-3, CAN-COORD-2 |
-| Interaction state machine | **not yet** (Slice 0b: `gip-interaction`, ADR-012 D2). Transitional: `CanvasHost` pan gesture | CAN-MODE-1/2 |
-| Document edits, history | `gip-history`, `gip-document` (Slice 0b onward) | CAN-HIST-1..4 |
-| Geometry, hit-testing | `gip-geometry` (Slice 0b onward) | CAN-GEOM-1..6 |
-| Selection | not yet (Slice 0b) | CAN-SEL-1..7 |
+| Document model (`.gip` tree) | `document-tree.md` | CAN-SER, SM1 |
+| Engine core (Rust/Wasm) & shell boundary | `engine-core.md` | ADR-001, SM3, CAN-MODE-1 |
+| Geometry engine (vector/paths/bounds) | `vector-engine.md` | CAN-GEOM, CAN-VEC, VG* |
+| Coordinate conversion | `coordinate-system.md` | CAN-COORD |
+| Transform system | `transforms.md` | CAN-TR |
+| Camera/viewport | (in `coordinate-system.md` §camera) | CAN-CAM |
+| Rendering engine | `rendering.md` | CAN-RENDER, R* |
+| Selection system | `selection-system.md` | CAN-SEL |
+| Hit-testing | (in `selection-system.md` §hit) | CAN-SEL-1, CAN-GEOM-4 |
+| Input system & state machine | `input-system.md` | CAN-MODE, CAN-INPUT |
+| Tool state machines | (in `input-system.md` §tools) | CAN-MODE |
+| Snapping engine | (in `input-system.md` §snapping interface; engine contract in `vector-engine.md` §consumers) | CAN-SNAP |
+| Layout engine (Auto Layout/constraints/RVS) | `layout-engine.md` | L* |
+| Text engine | (contract in `document-tree.md` §text + `vector-engine.md`; full doc when feature starts) | CAN-TEXT |
+| Guides/overlay engine | (in `rendering.md` §overlays) | CAN-GUIDE, CAN-OVL |
+| History (undo/redo) | `undo-redo.md` | CAN-HIST |
+| File format & serialization | `file-format.md` | CAN-SER |
+| Export renderer | (in `rendering.md` §export) | R1 |
+| Accessibility mirror | (in `document-tree.md` §a11y consumers; full doc when implemented) | CAN-A11Y |
+| Code generation / Code Workspace | `code-generation.md` | vision Solution 2 |
+| Performance/invalidation | (in `rendering.md` §invalidation) | CAN-PERF, P* |
 
-## 2. Implemented behavior (Slice 0a)
+## 2. Dependency direction (CAN-ARCH-2, binding)
 
-- Middle-button drag pans; the content follows the pointer by the same pixels (`pan_by`).
-- Plain wheel and two-finger scroll pan.
-- Ctrl/⌘ + wheel and trackpad pinch zoom around the pointer (`zoom_at`, factor `exp(-deltaY × s)`
-  with `s` = `WHEEL_ZOOM_SENSITIVITY`).
-- Origin crosshair at the core-reported world origin, 1 px, half-pixel aligned (CAN-SS-3).
-- Readout shows the core-computed zoom percent and origin.
+```
+tools / interaction (input-system)
+   │ uses
+   ▼
+selection · hit-testing · snapping ──► geometry engine ──► document model
+   │                                        ▲                   ▲
+   ▼                                        │                   │
+camera/coordinates ─────────────────────────┘                   │
+   │                                                            │
+   ▼                                                            │
+rendering (scene ← geometry+document) · overlays · export ──────┘
+layout engine ──► document model (writes via transactions only)
+history ──► document model (sole mutator path)
+a11y mirror · UI panels ──► document/selection stores (read + transactional writes)
+```
 
-## 3. Known gaps (recorded, not hidden)
+- Arrows = "may depend on". Reverse imports are violations. Rendered pixels never flow back
+  (CAN-ARCH-3). Camera and document never write each other (CAN-ARCH-5).
 
-- Space-hold temporary hand tool (CAN-CAM-4): Slice 0b.
-- Pan has no cancel (Escape) yet: pan does not change the document, so the rule's effect is
-  limited to the view; Slice 0b routes it through the state machine.
-- Keyboard zoom shortcuts: wait for the shortcut registry (rules/interactions I1).
-- Zoom-to-fit and presets: later.
-- Performance budgets (CAN-BUDGET) are measured once there are reference documents (Slice 0c).
+## 3. Frame lifecycle (the pointer→pixel loop, CAN-RENDER-4 / R3)
 
-## 4. Tests
+1. **Event in** — normalized pointer/key/wheel event (input-system).
+2. **Route** — single-owner state machine: current tool → current child state (CAN-MODE-1).
+3. **Resolve** — coordinate conversion (screen→world via canonical module), hit/hover/snap
+   queries against geometry engine (+spatial index).
+4. **Mutate (or preview)** — committed changes go through transactions (history); live gesture
+   values stay in transient state (SM domain 4) and produce *previews* only.
+5. **Invalidate** — dirty regions/nodes marked; layout reflow if layout inputs changed
+   (subtree-scoped, L5).
+6. **Draw** — scene update → culling/LOD → batched draws (document layer, then screen-space
+   overlay layer anchored via world→screen conversions).
+7. **Sync side channels** — selection store → panels; a11y mirror surgical updates; overlays'
+   non-visual state (e.g. pinned measures).
 
-| Test | Where |
-|---|---|
-| Anchor invariance, clamps, pan, rejection of invalid input, client→viewport conversion | `gip-session` unit tests (session.rs) |
-| Origin crosshair geometry, readout, no-conversion lint | `app/src/canvas/paint.test.ts` |
-| Start state, middle-drag pan, ctrl-wheel zoom | `app/e2e/canvas-view.spec.ts` (Playwright, production build) |
-| Handshake and engine-load failure | `app/e2e/engine-smoke.spec.ts`, `engine-error.spec.ts` |
+Budget: steps 1–6 within frame budget on reference documents (§26); heavy work (booleans, big
+flattens, decode, codegen preview) is async/worker-side with cancellation and joins at step 5–6
+when ready.
+
+## 4. Cross-cutting contracts (all subsystems)
+
+- **Single sources of truth:** geometry (geometry engine) · positions/converts (coordinate
+  module) · document data (document model via transactions) · camera (camera store) ·
+  selection (selection store) · mode (input state machine) · tokens (Design System).
+- **Determinism:** every subsystem's output is a pure function of (document, camera, input) —
+  no time/random/iteration-order dependence in document paths (CAN-SER-1).
+- **Screen-space chrome:** all interactive editor visuals obey CAN-SS laws (1px strokes,
+  screen-constant handles/hit areas, zoom-visibility thresholds).
+- **Testing:** each subsystem doc lists its Test Focus; the canvas matrix (CAN-TEST §25) binds.
+
+## 5. Open questions (ADR-gated, tracked)
+
+1. ADR-001 technology stack — **DECIDED (ACCEPTED): Option B — Rust/Wasm engine core + TS/React
+   shell; renderer = wgpu inside the core (WebGPU primary, WebGL2 fallback).** Boundary law:
+   `engine-core.md`.
+2. ✅ **PROPOSED — ADR-002 (2026-10-11):** transform storage & matrix conventions (decomposed
+   canonical fields; column-major 6-tuple matrices; degrees (−180,180]; flip flags; zero-crossing
+   policy). Closes transforms.md §7 items 1–4; one owner review item (stroke scaling under resize).
+3. ✅ **PROPOSED — ADR-003 (2026-10-11):** `.gip` v0 container/IDs/floats/assets/versioning.
+   Closes file-format.md §8 items 1–4; owner review item: public spec publication.
+4. ✅ **PROPOSED — ADR-004 (2026-10-11):** history entry storage = structured op logs; stack
+   policy; in-memory v1. Closes undo-redo.md §7 items 1–3.
+5. Spatial index structure choice (R-tree vs grid vs hybrid) → ADR with vector-engine impl.
+6. WebGL2 fallback parity tiers → ADR with renderer impl.
+7. Text engine shaping strategy (HarfBuzz-wasm vs platform shaping vs custom) → ADR when text
+   feature starts.
+8. RVS redistribution semantics → ADR-005 before RVS implementation (layout L3-4) — includes the
+   affordance color language reserved in DS `08` §8.
+9. Panic/trap recovery policy → P0-class ADR before risky subsystems (ADR-001 accepted cost 4).

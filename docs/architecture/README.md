@@ -11,7 +11,7 @@ is the placement law: core/shell ownership table + the Rust/Wasm ⇄ TypeScript 
 | Doc | Scope |
 |---|---|
 | `canvas.md` | **Hub** — subsystem map, dependency direction, frame lifecycle, open questions |
-| `canvas.md` | Canvas implementation map: responsibility → code → rule IDs (rules/canvas.md) | ACTIVE (Slice 0a) |
+| `canvas-implementation.md` | Canvas implementation map: responsibility → code → rule IDs (rules/canvas.md) | ACTIVE (Slice 0a) |
 | `engine-core.md` | **Placement law** — core/shell ownership table, Rust/Wasm ⇄ TS boundary protocol, memory/threading/error policy, testing pyramid |
 | `document-tree.md` | `.gip` document model: node types, container contracts, components, text nodes |
 | `coordinate-system.md` | The 8 spaces, canonical conversion module, camera store |

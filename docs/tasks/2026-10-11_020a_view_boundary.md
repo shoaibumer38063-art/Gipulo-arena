@@ -8,7 +8,7 @@
 - `gip-session`: `Session` (viewport rect, camera), `ViewSnapshot`, validated `set_viewport` / `zoom_at` / `pan_by`, snapshot with zoom percent and origin. Browser binding: `Engine` + `ViewState` (transport only). Protocol bumped to **1**.
 - Shell: `engine/client.ts` (typed handle, plain view copies), `canvas/CanvasHost.tsx` (raw input forwarding, non-passive wheel, ResizeObserver viewport sync), `canvas/paint.ts` (pure painters), `App.tsx` (canvas above the gallery).
 - Token added: `--canvas-host-h` (tokens.css + tokens.ts, drift test green).
-- `docs/architecture/canvas.md` (implementation map) and ADR-012.
+- `docs/architecture/canvas-implementation.md` (implementation map; the hub `canvas.md` is unchanged) and ADR-012.
 
 ## Acceptance criteria covered (plan §4)
 - AC-1 round trip: covered by gip-coords tests (existing) and anchor test.
