@@ -117,8 +117,8 @@ impl Engine {
     }
 
     /// Pointer moved (client pixels). Returns `false` for non-finite input.
-    pub fn pointer_move(&mut self, client_x: f64, client_y: f64) -> bool {
-        self.session.pointer_move(client_x, client_y)
+    pub fn pointer_move(&mut self, client_x: f64, client_y: f64, shift: bool, alt: bool) -> bool {
+        self.session.pointer_move(client_x, client_y, shift, alt)
     }
 
     /// Pointer released (client pixels). Commits the gesture if it changed the document.
@@ -166,6 +166,21 @@ impl Engine {
             Tool::Rectangle => "rectangle",
         }
         .to_owned()
+    }
+
+    /// Resize handles of the single resize target: 8 points (x, y) in viewport pixels, in the
+    /// order NW, N, NE, E, SE, S, SW, W. Empty when no single object can be resized.
+    #[must_use]
+    pub fn handles(&self) -> Vec<f64> {
+        self.session.handles()
+    }
+
+    /// World box `[x, y, w, h]` of the single selected object, or empty.
+    #[must_use]
+    pub fn selection_bounds(&self) -> Vec<f64> {
+        self.session
+            .selection_bounds()
+            .map_or_else(Vec::new, |(x, y, w, h)| vec![x, y, w, h])
     }
 
     /// Deletes the selected objects as one history entry.

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type { EngineView } from '../engine/client';
-import { objectReadout, originCrosshair, viewReadout } from './paint';
+import { objectReadout, originCrosshair, sizeReadout, viewReadout } from './paint';
 
 function view(overrides: Partial<EngineView> = {}): EngineView {
   return {
@@ -44,6 +44,13 @@ describe('view readout', () => {
     expect(viewReadout(view({ zoom: 1.25, zoomPercent: 125, originX: -12.4, originY: 3.6 }))).toBe(
       'Zoom 125% · origin -12, 4',
     );
+  });
+});
+
+describe('size readout', () => {
+  it('shows the selected object size in whole world units', () => {
+    expect(sizeReadout(new Float64Array([10, 20, 160.4, 89.6]))).toBe('160 × 90');
+    expect(sizeReadout(new Float64Array())).toBe('');
   });
 });
 

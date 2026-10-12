@@ -2,15 +2,19 @@
 
 use gip_coords::viewport::screen_to_viewport;
 use gip_coords::{Camera, Mat2, Vec2, ViewportRect};
-use gip_document::{Document, NodeId};
+use gip_document::{Document, NodeId, Transform};
 use gip_geometry::trs_of;
 
 /// Pixels the pointer must travel after pressing before a gesture becomes a drag (CAN-INPUT-2).
 pub const DRAG_THRESHOLD_PX: f64 = 3.0;
 
-/// Screen-space hit tolerance for zero-size objects (CAN-GEOM-5): they stay addressable at any
-/// zoom. [PROPOSED] value; the rule's point-handle equivalent is 16 px, so the radius is half that.
+/// Screen-space hit tolerance for zero-size objects (CAN-GEOM-5). [PROPOSED] value; the rule's
+/// point-handle equivalent is 16 px, so the radius is half that.
 pub const HIT_TOLERANCE_PX: f64 = 8.0;
+
+/// Handle activation half-size in screen pixels (Slice 1, D2: a 12 px clickable square around the
+/// 8 px visual).
+pub const HANDLE_SLOP_PX: f64 = 6.0;
 
 /// The active tool (CAN-MODE-1). Pan is a gesture (middle button), not a tool.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,6 +32,137 @@ pub struct View {
     pub camera: Camera,
     /// Canvas placement in client pixels.
     pub rect: ViewportRect,
+}
+
+/// Modifier keys that change a gesture while it runs (CAN-TR-3).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Modifiers {
+    /// Shift: proportional corner resize.
+    pub shift: bool,
+    /// Alt / ⌥: resize from the center.
+    pub alt: bool,
+}
+
+/// The eight resize handles, in draw-list order.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Handle {
+    /// Top-left corner.
+    NW,
+    /// Top edge midpoint.
+    N,
+    /// Top-right corner.
+    NE,
+    /// Right edge midpoint.
+    E,
+    /// Bottom-right corner.
+    SE,
+    /// Bottom edge midpoint.
+    S,
+    /// Bottom-left corner.
+    SW,
+    /// Left edge midpoint.
+    W,
+}
+
+impl Handle {
+    /// All handles in the order the boundary reports them.
+    pub const ALL: [Handle; 8] = [
+        Handle::NW,
+        Handle::N,
+        Handle::NE,
+        Handle::E,
+        Handle::SE,
+        Handle::S,
+        Handle::SW,
+        Handle::W,
+    ];
+
+    /// Which edges the handle moves: `(-1 | 0 | 1, -1 | 0 | 1)` for (x, y). Zero means no move.
+    #[must_use]
+    pub fn axes(self) -> (i8, i8) {
+        match self {
+            Handle::NW => (-1, -1),
+            Handle::N => (0, -1),
+            Handle::NE => (1, -1),
+            Handle::E => (1, 0),
+            Handle::SE => (1, 1),
+            Handle::S => (0, 1),
+            Handle::SW => (-1, 1),
+            Handle::W => (-1, 0),
+        }
+    }
+}
+
+/// An axis-aligned box `(x, y, w, h)` in world units.
+pub type Rect4 = (f64, f64, f64, f64);
+
+/// World positions of the eight handles of an unrotated transform, in [`Handle::ALL`] order.
+#[must_use]
+pub fn handle_points(t: &Transform) -> [Vec2; 8] {
+    let mut out = [Vec2::ZERO; 8];
+    for (slot, handle) in out.iter_mut().zip(Handle::ALL) {
+        let (hx, vy) = handle.axes();
+        *slot = Vec2::new(
+            t.x + (f64::from(hx) + 1.0) / 2.0 * t.w,
+            t.y + (f64::from(vy) + 1.0) / 2.0 * t.h,
+        );
+    }
+    out
+}
+
+/// The single node that shows handles: exactly one selected, unrotated, unflipped, visible, and
+/// unlocked (Slice 1 scope; rotated and flipped resize is deferred).
+#[must_use]
+pub fn resize_target(doc: &Document, selection: &[NodeId]) -> Option<NodeId> {
+    if selection.len() != 1 {
+        return None;
+    }
+    let id = selection[0];
+    let node = doc.nodes().get(&id)?;
+    let t = node.transform;
+    (node.visible && !node.locked && t.rotation_deg == 0.0 && !t.flip_h && !t.flip_v).then_some(id)
+}
+
+/// The box after a handle drag (CAN-TR-2: `start` and the total `delta` only, never accumulated).
+///
+/// - A corner moves two edges; an edge moves one (CAN-TR-3). The opposite edge stays fixed.
+/// - Dimensions clamp at zero: the box never mirrors or goes negative [D1: clamp].
+/// - `proportional` (Shift) keeps the start aspect for corner handles only.
+/// - `from_center` (Alt) keeps the center fixed.
+#[must_use]
+pub fn resize_box(start: Rect4, handle: Handle, delta: Vec2, mods: Modifiers) -> Rect4 {
+    let (x0, y0, w0, h0) = start;
+    let (hx, vy) = handle.axes();
+    let scale = if mods.alt { 2.0 } else { 1.0 };
+    let mut w = w0;
+    let mut h = h0;
+    if hx != 0 {
+        w = (w0 + f64::from(hx) * delta.x * scale).max(0.0);
+    }
+    if vy != 0 {
+        h = (h0 + f64::from(vy) * delta.y * scale).max(0.0);
+    }
+    let corner = hx != 0 && vy != 0;
+    if mods.shift && corner && w0 > 0.0 && h0 > 0.0 {
+        let s = (w / w0).max(h / h0);
+        w = w0 * s;
+        h = h0 * s;
+    }
+    let x = if mods.alt {
+        x0 + w0 / 2.0 - w / 2.0
+    } else if hx < 0 {
+        x0 + w0 - w
+    } else {
+        x0
+    };
+    let y = if mods.alt {
+        y0 + h0 / 2.0 - h / 2.0
+    } else if vy < 0 {
+        y0 + h0 - h
+    } else {
+        y0
+    };
+    (x, y, w, h)
 }
 
 /// One node's move, as a history-ready pair of positions (world units).
@@ -59,6 +194,15 @@ pub enum Commit {
     Move {
         /// Per-node positions.
         items: Vec<MoveItem>,
+    },
+    /// Resize one node (Slice 1).
+    Resize {
+        /// Node resized.
+        node: NodeId,
+        /// Box at gesture start.
+        from: Rect4,
+        /// Box at gesture end.
+        to: Rect4,
     },
     /// Delete nodes.
     Delete {
@@ -102,21 +246,37 @@ pub enum Preview {
         /// Previewed positions.
         items: Vec<(NodeId, (f64, f64))>,
     },
+    /// A node being resized, at its previewed box.
+    Resizing {
+        /// Node resized.
+        node: NodeId,
+        /// Previewed box.
+        rect: Rect4,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
     Idle,
-    /// Button down, threshold not yet crossed.
+    /// Button down, threshold not yet crossed. `handle` is set when the press landed on a handle.
     Pressed {
         client: Vec2,
         world: Vec2,
+        handle: Option<(NodeId, Handle)>,
     },
     /// Dragging selected nodes.
     Moving {
         start_world: Vec2,
         items: Vec<(NodeId, (f64, f64))>,
         delta: Vec2,
+    },
+    /// Dragging a handle.
+    Resizing {
+        node: NodeId,
+        start: Rect4,
+        handle: Handle,
+        start_world: Vec2,
+        current: Rect4,
     },
     /// Drawing a rectangle.
     Creating {
@@ -206,6 +366,10 @@ impl Interaction {
                     .map(|(id, (x, y))| (*id, (x + delta.x, y + delta.y)))
                     .collect(),
             },
+            State::Resizing { node, current, .. } => Preview::Resizing {
+                node: *node,
+                rect: *current,
+            },
             _ => Preview::None,
         }
     }
@@ -248,19 +412,42 @@ impl Interaction {
         let world = to_world(view, client);
         match self.tool {
             Tool::Rectangle => {
-                self.state = State::Pressed { client, world };
+                self.state = State::Pressed {
+                    client,
+                    world,
+                    handle: None,
+                };
             }
             Tool::Select => {
+                if let Some(handle) = self.handle_at(doc, view, world) {
+                    // A press on a handle leaves the selection alone and starts a resize.
+                    self.state = State::Pressed {
+                        client,
+                        world,
+                        handle: Some(handle),
+                    };
+                    return Vec::new();
+                }
                 let hit = hit_test(doc, view, world);
                 self.apply_click_selection(hit, shift);
-                self.state = State::Pressed { client, world };
+                self.state = State::Pressed {
+                    client,
+                    world,
+                    handle: None,
+                };
             }
         }
         Vec::new()
     }
 
     /// Pointer moved (buttons not required; hover is tracked while idle).
-    pub fn pointer_move(&mut self, doc: &Document, view: View, client: Vec2) -> Vec<Effect> {
+    pub fn pointer_move(
+        &mut self,
+        doc: &Document,
+        view: View,
+        client: Vec2,
+        mods: Modifiers,
+    ) -> Vec<Effect> {
         match self.state.clone() {
             State::Idle => {
                 self.hover = if self.tool == Tool::Select {
@@ -273,11 +460,27 @@ impl Interaction {
             State::Pressed {
                 client: press_client,
                 world: press_world,
+                handle,
             } => {
                 if client.distance_sq(press_client).sqrt() < DRAG_THRESHOLD_PX {
                     return Vec::new();
                 }
                 let world = to_world(view, client);
+                if let Some((node, handle)) = handle {
+                    if let Some(start) = node_box(doc, node) {
+                        self.state = State::Resizing {
+                            node,
+                            start,
+                            handle,
+                            start_world: press_world,
+                            current: start,
+                        };
+                        self.update_resize(world, mods);
+                    } else {
+                        self.state = State::Idle;
+                    }
+                    return Vec::new();
+                }
                 match self.tool {
                     Tool::Rectangle => {
                         self.state = State::Creating {
@@ -305,6 +508,10 @@ impl Interaction {
             }
             State::Moving { start_world, .. } => {
                 self.update_move(to_world(view, client), start_world);
+                Vec::new()
+            }
+            State::Resizing { .. } => {
+                self.update_resize(to_world(view, client), mods);
                 Vec::new()
             }
             State::Creating { start_world, .. } => {
@@ -343,6 +550,22 @@ impl Interaction {
                     })
                     .collect();
                 vec![Effect::Commit(Commit::Move { items })]
+            }
+            State::Resizing {
+                node,
+                start,
+                current,
+                ..
+            } => {
+                if current == start {
+                    Vec::new()
+                } else {
+                    vec![Effect::Commit(Commit::Resize {
+                        node,
+                        from: start,
+                        to: current,
+                    })]
+                }
             }
             State::Creating {
                 start_world,
@@ -419,11 +642,43 @@ impl Interaction {
             .collect()
     }
 
+    /// The handle under `world`, if the single resize target has one (within the activation
+    /// square, [`HANDLE_SLOP_PX`] screen pixels).
+    fn handle_at(&self, doc: &Document, view: View, world: Vec2) -> Option<(NodeId, Handle)> {
+        let id = resize_target(doc, &self.selection)?;
+        let t = doc.nodes().get(&id)?.transform;
+        let tol = HANDLE_SLOP_PX / view.camera.zoom;
+        Handle::ALL
+            .iter()
+            .zip(handle_points(&t))
+            .find(|(_, p)| (p.x - world.x).abs() <= tol && (p.y - world.y).abs() <= tol)
+            .map(|(handle, _)| (id, *handle))
+    }
+
     fn update_move(&mut self, world: Vec2, start_world: Vec2) {
         if let State::Moving { delta, .. } = &mut self.state {
             *delta = world - start_world;
         }
     }
+
+    fn update_resize(&mut self, world: Vec2, mods: Modifiers) {
+        if let State::Resizing {
+            start,
+            handle,
+            start_world,
+            current,
+            ..
+        } = &mut self.state
+        {
+            *current = resize_box(*start, *handle, world - *start_world, mods);
+        }
+    }
+}
+
+/// The unrotated box of a node, or `None` if it does not exist.
+fn node_box(doc: &Document, id: NodeId) -> Option<Rect4> {
+    let t = doc.nodes().get(&id)?.transform;
+    Some((t.x, t.y, t.w, t.h))
 }
 
 fn to_world(view: View, client: Vec2) -> Vec2 {

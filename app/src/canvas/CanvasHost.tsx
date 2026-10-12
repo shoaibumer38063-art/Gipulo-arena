@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 
 import type { EngineHandle, EngineView, ToolName } from '../engine/client';
 import { matchShortcut, type ShortcutAction } from './shortcuts';
-import { objectReadout, paintFrame, paintRects, viewReadout } from './paint';
+import { objectReadout, paintFrame, paintHandles, paintRects, sizeReadout, viewReadout } from './paint';
 import './CanvasHost.css';
 
 /**
@@ -15,6 +15,8 @@ const WHEEL_ZOOM_SENSITIVITY = 0.00095;
 interface Snapshot {
   readonly view: EngineView;
   readonly rects: Float64Array;
+  readonly handles: Float64Array;
+  readonly bounds: Float64Array;
   readonly stride: number;
   readonly objects: number;
   readonly selected: number;
@@ -27,6 +29,8 @@ function readSnapshot(engine: EngineHandle): Snapshot {
   return {
     view: engine.view(),
     rects: engine.rects(),
+    handles: engine.handles(),
+    bounds: engine.selectionBounds(),
     stride: engine.rectStride,
     objects: engine.objectCount(),
     selected: engine.selectionCount(),
@@ -107,6 +111,12 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       accent,
       hoverAlpha: Number.parseFloat(styles.getPropertyValue('--opacity-muted')) || 0.6,
     });
+    paintHandles(
+      ctx,
+      snap.handles,
+      Number.parseFloat(styles.getPropertyValue('--handle-size')) || 8,
+      { fill: styles.getPropertyValue('--frame-bg').trim(), accent },
+    );
   }, [snap]);
 
   // Test and benchmark hook: `?fixture=<name>` opens `/fixtures/<name>.gip` (a committed golden
@@ -178,7 +188,7 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
   };
 
   const onPointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
-    engine.pointerMove(event.clientX, event.clientY);
+    engine.pointerMove(event.clientX, event.clientY, event.shiftKey, event.altKey);
     refresh();
   };
 
@@ -229,6 +239,9 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       </output>
       <output className="canvas-host__counts" data-testid="object-readout">
         {objectReadout(snap.objects, snap.selected)}
+      </output>
+      <output className="canvas-host__size" data-testid="size-readout">
+        {sizeReadout(snap.bounds)}
       </output>
     </section>
   );

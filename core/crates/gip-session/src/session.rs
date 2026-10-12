@@ -12,7 +12,10 @@ use gip_coords::{Camera, Mat2, Vec2, ViewportRect};
 use gip_document::{FieldKey, FieldValue, GipFile, Node, NodeId, NodeKind, Transform};
 use gip_geometry::trs_of;
 use gip_history::{History, IntentLabel, Parent};
-use gip_interaction::{Commit, Effect, Interaction, Preview, Tool, View};
+use gip_interaction::{
+    Commit, Effect, Interaction, Modifiers, Preview, Rect4, Tool, View, handle_points,
+    resize_target,
+};
 
 /// Document salt for documents created by the session (Slice 0; a real salt comes with file I/O).
 const NEW_DOC_SALT: u32 = 1;
@@ -136,14 +139,17 @@ impl Session {
     }
 
     /// Pointer moved. Returns `false` for non-finite input.
-    pub fn pointer_move(&mut self, client_x: f64, client_y: f64) -> bool {
+    pub fn pointer_move(&mut self, client_x: f64, client_y: f64, shift: bool, alt: bool) -> bool {
         let Some(client) = finite(client_x, client_y) else {
             return false;
         };
         let view = self.view();
-        let effects = self
-            .machine
-            .pointer_move(self.history.document(), view, client);
+        let effects = self.machine.pointer_move(
+            self.history.document(),
+            view,
+            client,
+            Modifiers { shift, alt },
+        );
         self.apply(effects);
         true
     }
@@ -260,12 +266,6 @@ impl Session {
         let doc = self.history.document();
         let camera = self.camera;
         let preview = self.machine.preview();
-        let moved = |id: NodeId| -> Option<(f64, f64)> {
-            match &preview {
-                Preview::Moving { items } => items.iter().find(|(n, _)| *n == id).map(|(_, p)| *p),
-                _ => None,
-            }
-        };
         let mut out = Vec::new();
         let Some(page) = doc.pages().first() else {
             return out;
@@ -277,11 +277,7 @@ impl Session {
             if !node.visible {
                 continue;
             }
-            let mut transform: Transform = node.transform;
-            if let Some((x, y)) = moved(*id) {
-                transform.x = x;
-                transform.y = y;
-            }
+            let transform = effective_transform(&preview, *id, node.transform);
             let m = Mat2::from_trs(trs_of(&transform));
             out.push(RectOp {
                 id: Some(*id),
@@ -307,6 +303,40 @@ impl Session {
             });
         }
         out
+    }
+
+    /// Resize handles of the single resize target, in viewport pixels: 8 points (x, y), in the
+    /// order NW, N, NE, E, SE, S, SW, W. Empty when no single object can be resized.
+    #[must_use]
+    pub fn handles(&self) -> Vec<f64> {
+        let doc = self.history.document();
+        let Some(id) = resize_target(doc, self.machine.selection()) else {
+            return Vec::new();
+        };
+        let Some(node) = doc.nodes().get(&id) else {
+            return Vec::new();
+        };
+        let t = effective_transform(&self.machine.preview(), id, node.transform);
+        handle_points(&t)
+            .iter()
+            .flat_map(|p| {
+                let v = self.camera.world_to_viewport(*p);
+                [v.x, v.y]
+            })
+            .collect()
+    }
+
+    /// World box `(x, y, w, h)` of the single selected object, for the size readout.
+    #[must_use]
+    pub fn selection_bounds(&self) -> Option<Rect4> {
+        let selection = self.machine.selection();
+        let [id] = selection else {
+            return None;
+        };
+        let doc = self.history.document();
+        let node = doc.nodes().get(id)?;
+        let t = effective_transform(&self.machine.preview(), *id, node.transform);
+        Some((t.x, t.y, t.w, t.h))
     }
 
     fn view(&self) -> View {
@@ -356,6 +386,16 @@ impl Session {
                     self.machine.set_selection(&[id]);
                 }
             }
+            Commit::Resize { node, to, .. } => {
+                let (x, y, w, h) = to;
+                let _ = self.history.transact(IntentLabel::new("resize"), |tx| {
+                    tx.set_field(node, FieldKey::X, FieldValue::Number(x))?;
+                    tx.set_field(node, FieldKey::Y, FieldValue::Number(y))?;
+                    tx.set_field(node, FieldKey::W, FieldValue::Number(w))?;
+                    tx.set_field(node, FieldKey::H, FieldValue::Number(h))?;
+                    Ok(())
+                });
+            }
             Commit::Move { items } => {
                 let _ = self.history.transact(IntentLabel::new("move"), |tx| {
                     for item in &items {
@@ -378,6 +418,23 @@ impl Session {
             }
         }
     }
+}
+
+/// A node's transform with any live gesture preview applied (move or resize).
+fn effective_transform(preview: &Preview, id: NodeId, mut t: Transform) -> Transform {
+    match preview {
+        Preview::Moving { items } => {
+            if let Some((_, (x, y))) = items.iter().find(|(n, _)| *n == id) {
+                t.x = *x;
+                t.y = *y;
+            }
+        }
+        Preview::Resizing { node, rect } if *node == id => {
+            (t.x, t.y, t.w, t.h) = *rect;
+        }
+        _ => {}
+    }
+    t
 }
 
 fn finite(x: f64, y: f64) -> Option<Vec2> {
@@ -527,8 +584,8 @@ mod interaction_tests {
     fn drag(s: &mut Session, from: (f64, f64), to: (f64, f64)) {
         assert!(s.pointer_down(from.0, from.1, 0, false));
         let mid = ((from.0 + to.0) / 2.0, (from.1 + to.1) / 2.0);
-        assert!(s.pointer_move(mid.0, mid.1));
-        assert!(s.pointer_move(to.0, to.1));
+        assert!(s.pointer_move(mid.0, mid.1, false, false));
+        assert!(s.pointer_move(to.0, to.1, false, false));
         assert!(s.pointer_up(to.0, to.1));
     }
 
@@ -564,7 +621,7 @@ mod interaction_tests {
         let mut s = session();
         assert!(s.set_tool(Tool::Rectangle));
         assert!(s.pointer_down(50.0, 50.0, 0, false));
-        assert!(s.pointer_move(52.0, 51.0)); // 2.2 px: below the 3 px threshold
+        assert!(s.pointer_move(52.0, 51.0, false, false)); // 2.2 px: below the 3 px threshold
         assert!(s.pointer_up(52.0, 51.0));
         assert_eq!(s.object_count(), 0);
         assert!(!s.can_undo());
@@ -583,7 +640,7 @@ mod interaction_tests {
         let mut s = session();
         assert!(s.set_tool(Tool::Rectangle));
         assert!(s.pointer_down(10.0, 10.0, 0, false));
-        assert!(s.pointer_move(120.0, 90.0));
+        assert!(s.pointer_move(120.0, 90.0, false, false));
         assert_eq!(
             s.rects().len(),
             1,
@@ -635,7 +692,7 @@ mod interaction_tests {
         let mut s = session();
         draw_rect(&mut s, (100.0, 100.0), (200.0, 150.0));
         assert!(s.pointer_down(150.0, 120.0, 0, false));
-        assert!(s.pointer_move(190.0, 120.0));
+        assert!(s.pointer_move(190.0, 120.0, false, false));
         assert!(approx(first_corner(&s).x, 140.0), "preview shows the drag");
         assert!(
             s.undo(),
@@ -649,7 +706,7 @@ mod interaction_tests {
         let mut s = session();
         draw_rect(&mut s, (100.0, 100.0), (200.0, 150.0));
         assert!(s.pointer_down(150.0, 120.0, 0, false));
-        assert!(s.pointer_move(190.0, 160.0));
+        assert!(s.pointer_move(190.0, 160.0, false, false));
         s.cancel();
         assert!(s.pointer_up(190.0, 160.0));
         assert!(approx(first_corner(&s).x, 100.0) && approx(first_corner(&s).y, 100.0));
@@ -769,7 +826,7 @@ mod interaction_tests {
     fn middle_button_pans_without_a_history_entry() {
         let mut s = session();
         assert!(s.pointer_down(100.0, 100.0, 1, false));
-        assert!(s.pointer_move(130.0, 88.0));
+        assert!(s.pointer_move(130.0, 88.0, false, false));
         assert!(s.pointer_up(130.0, 88.0));
         let snap = s.snapshot();
         assert!(approx(snap.origin.x, 30.0) && approx(snap.origin.y, -12.0));
@@ -788,7 +845,7 @@ mod interaction_tests {
     fn non_finite_pointer_input_is_rejected() {
         let mut s = session();
         assert!(!s.pointer_down(f64::NAN, 0.0, 0, false));
-        assert!(!s.pointer_move(0.0, f64::INFINITY));
+        assert!(!s.pointer_move(0.0, f64::INFINITY, false, false));
         assert!(!s.pointer_up(f64::NAN, f64::NAN));
         assert!(!s.set_tool(Tool::Select) || s.tool() == Tool::Select);
     }
@@ -807,7 +864,7 @@ mod interaction_tests {
         draw_rect(&mut s, (100.0, 100.0), (200.0, 150.0));
         let before = s.rects();
         assert!(s.pointer_down(150.0, 120.0, 0, false));
-        assert!(s.pointer_move(151.0, 121.0)); // 1.4 px: below the 3 px threshold
+        assert!(s.pointer_move(151.0, 121.0, false, false)); // 1.4 px: below the 3 px threshold
         assert!(s.pointer_up(151.0, 121.0));
         assert_eq!(s.rects(), before);
     }
@@ -818,7 +875,7 @@ mod interaction_tests {
         draw_rect(&mut s, (100.0, 100.0), (200.0, 150.0));
         let before = s.rects();
         assert!(s.pointer_down(150.0, 120.0, 0, false));
-        assert!(s.pointer_move(190.0, 160.0));
+        assert!(s.pointer_move(190.0, 160.0, false, false));
         s.cancel();
         assert!(s.pointer_up(190.0, 160.0));
         assert_eq!(s.rects(), before);
@@ -889,5 +946,178 @@ mod interaction_tests {
             assert!(s.pointer_up(x + 20.0, 200.0 * zoom));
             assert_eq!(s.selection_count(), 0, "miss beyond 8 px at zoom {zoom}");
         }
+    }
+}
+
+#[cfg(test)]
+mod resize_tests {
+    use super::*;
+
+    fn session() -> Session {
+        let mut s = Session::new();
+        assert!(s.set_viewport(0.0, 0.0, 800.0, 600.0));
+        s
+    }
+
+    fn drag_mods(s: &mut Session, from: (f64, f64), to: (f64, f64), shift: bool, alt: bool) {
+        assert!(s.pointer_down(from.0, from.1, 0, false));
+        assert!(s.pointer_move(from.0 + 4.0, from.1 + 4.0, shift, alt));
+        assert!(s.pointer_move(to.0, to.1, shift, alt));
+        assert!(s.pointer_up(to.0, to.1));
+    }
+
+    fn drag(s: &mut Session, from: (f64, f64), to: (f64, f64)) {
+        drag_mods(s, from, to, false, false);
+    }
+
+    /// Creates a 100×50 rectangle at (100, 100) and leaves it selected.
+    fn rect(s: &mut Session) {
+        assert!(s.set_tool(Tool::Rectangle));
+        drag(s, (100.0, 100.0), (200.0, 150.0));
+        assert!(s.set_tool(Tool::Select));
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+    }
+
+    fn approx(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-9
+    }
+
+    #[test]
+    fn corner_handle_resizes_two_edges_and_keeps_the_opposite_corner() {
+        let mut s = session();
+        rect(&mut s);
+        drag(&mut s, (200.0, 150.0), (240.0, 170.0)); // SE handle
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 140.0, 70.0)));
+    }
+
+    #[test]
+    fn edge_handle_resizes_one_edge() {
+        let mut s = session();
+        rect(&mut s);
+        drag(&mut s, (200.0, 125.0), (230.0, 125.0)); // E handle
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 130.0, 50.0)));
+    }
+
+    #[test]
+    fn nw_corner_moves_the_left_and_top_edges() {
+        let mut s = session();
+        rect(&mut s);
+        drag(&mut s, (100.0, 100.0), (80.0, 90.0)); // NW handle
+        assert_eq!(s.selection_bounds(), Some((80.0, 90.0, 120.0, 60.0)));
+    }
+
+    #[test]
+    fn shift_keeps_the_start_aspect_ratio_on_a_corner() {
+        let mut s = session();
+        rect(&mut s);
+        // Start 100×50 (2:1). Pointer +60, +0: the larger scale (1.6) wins → 160×80.
+        drag_mods(&mut s, (200.0, 150.0), (260.0, 150.0), true, false);
+        let (_, _, w, h) = s.selection_bounds().expect("selected");
+        assert!(approx(w / h, 2.0), "aspect held exactly: {w}×{h}");
+        assert!(approx(w, 160.0));
+    }
+
+    #[test]
+    fn alt_resizes_from_the_center() {
+        let mut s = session();
+        rect(&mut s);
+        drag_mods(&mut s, (200.0, 125.0), (220.0, 125.0), false, true); // E, +20 with Alt
+        // Width grows by 2×20 around the center (150): 140 wide, x = 80.
+        assert_eq!(s.selection_bounds(), Some((80.0, 100.0, 140.0, 50.0)));
+    }
+
+    #[test]
+    fn dragging_past_the_opposite_edge_clamps_at_zero() {
+        let mut s = session();
+        rect(&mut s);
+        drag(&mut s, (200.0, 125.0), (50.0, 125.0)); // E handle, far past the W edge
+        let (x, _, w, _) = s.selection_bounds().expect("selected");
+        assert!(approx(w, 0.0), "width clamps at zero");
+        assert!(approx(x, 100.0), "left edge stays put");
+    }
+
+    #[test]
+    fn a_resize_is_one_entry_and_undo_restores_the_start_box() {
+        let mut s = session();
+        rect(&mut s);
+        drag(&mut s, (200.0, 150.0), (240.0, 170.0));
+        assert!(s.undo());
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+        assert!(s.undo(), "the create is the next entry");
+        assert_eq!(s.object_count(), 0);
+    }
+
+    #[test]
+    fn escape_during_resize_restores_the_exact_box_with_no_entry() {
+        let mut s = session();
+        rect(&mut s);
+        let before = s.rects();
+        assert!(s.pointer_down(200.0, 150.0, 0, false));
+        assert!(s.pointer_move(230.0, 170.0, false, false));
+        s.escape();
+        assert!(s.pointer_up(230.0, 170.0));
+        assert_eq!(s.rects(), before);
+        assert!(s.undo());
+        assert_eq!(s.object_count(), 0, "only the create is in history");
+    }
+
+    #[test]
+    fn repeated_resizes_do_not_drift() {
+        let mut s = session();
+        rect(&mut s);
+        for i in 0..1000 {
+            let d = if i % 2 == 0 { 3.0 } else { -3.0 };
+            let (_, _, w, _) = s.selection_bounds().expect("selected");
+            let x = 100.0 + w;
+            drag(&mut s, (x, 125.0), (x + d, 125.0));
+        }
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+    }
+
+    #[test]
+    fn handle_press_takes_precedence_over_the_body_and_keeps_the_selection() {
+        let mut s = session();
+        rect(&mut s);
+        // (200, 150) is the SE corner; it is also on the body's edge. The handle wins.
+        drag(&mut s, (200.0, 150.0), (210.0, 150.0));
+        assert_eq!(s.selection_count(), 1);
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 110.0, 50.0)));
+    }
+
+    #[test]
+    fn handles_are_reported_at_the_eight_points_and_follow_a_resize() {
+        let mut s = session();
+        rect(&mut s);
+        let h = s.handles();
+        assert_eq!(h.len(), 16);
+        assert_eq!(&h[8..10], &[200.0, 150.0], "index 4 is SE");
+        drag(&mut s, (200.0, 150.0), (240.0, 170.0));
+        assert_eq!(&s.handles()[8..10], &[240.0, 170.0]);
+    }
+
+    #[test]
+    fn no_handles_without_a_single_eligible_selection() {
+        let mut s = session();
+        rect(&mut s);
+        s.escape();
+        assert!(s.handles().is_empty(), "nothing selected");
+        assert_eq!(s.selection_bounds(), None);
+    }
+
+    #[test]
+    fn handle_activation_is_a_screen_square_at_any_zoom() {
+        let mut s = session();
+        rect(&mut s);
+        assert!(s.zoom_at(0.0, 0.0, 4.0)); // 400 %: the SE corner is at (800, 600) on screen
+        // 4 px off the corner (1 world unit at 400 %) is still a handle hit.
+        assert!(s.pointer_down(804.0, 604.0, 0, false));
+        assert!(s.pointer_move(860.0, 620.0, false, false));
+        assert!(s.pointer_up(860.0, 620.0));
+        let (_, _, w, _) = s.selection_bounds().expect("selected");
+        // Press at world 201 (804 px), release at world 215 (860 px): a 14 world-unit drag.
+        assert!(
+            approx(w, 114.0),
+            "gesture delta is measured from the press point: got {w}"
+        );
     }
 }

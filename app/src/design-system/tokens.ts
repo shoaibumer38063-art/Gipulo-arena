@@ -81,6 +81,8 @@ export const TOKEN_NAMES = [
   'stroke-canvas-path',
   'stroke-handle-line',
   'stroke-halo',
+  // canvas
+  'handle-size',
   // elevation
   'shadow-elevation',
   'shadow-menu',

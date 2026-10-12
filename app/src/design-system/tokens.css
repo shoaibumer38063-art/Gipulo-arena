@@ -109,6 +109,7 @@
   --stroke-canvas-path: 1.5px;
   --stroke-handle-line: 0.75px;
   --stroke-halo: 3px;
+  --handle-size: 8px; /* canvas resize handle visual, CAN-SEL-6 */
 
   /* elevation */
   --shadow-elevation: 0 0 0.5px rgba(0, 0, 0, 0.3), 0 10px 16px rgba(0, 0, 0, 0.12),

@@ -15,7 +15,7 @@
 
 /// Boundary protocol version — the shell↔core handshake (engine-core.md §10). A mismatch is a
 /// clear startup error, never silent misbehavior. Bump on every breaking boundary change.
-pub const PROTOCOL_VERSION: u32 = 3;
+pub const PROTOCOL_VERSION: u32 = 4;
 
 /// Core crates re-exported as the native facade surface (tests, tools, CI consumers).
 pub use gip_coords as coords;
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn protocol_version_is_three_after_the_open_boundary_was_added() {
-        assert_eq!(PROTOCOL_VERSION, 3);
+    fn protocol_version_is_four_after_the_resize_boundary_was_added() {
+        assert_eq!(PROTOCOL_VERSION, 4);
     }
 }

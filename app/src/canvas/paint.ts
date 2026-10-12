@@ -119,3 +119,31 @@ export function paintRects(
     }
   }
 }
+
+/** Readout for the selected object's size, in whole world units. */
+export function sizeReadout(bounds: Float64Array): string {
+  if (bounds.length < 4) return '';
+  return `${Math.round(bounds[2] ?? 0)} × ${Math.round(bounds[3] ?? 0)}`;
+}
+
+/**
+ * Paints the resize handles as squares centered on the core's handle points. `size` is the
+ * visual edge length in screen pixels, read from the `--handle-size` token by the caller.
+ */
+export function paintHandles(
+  ctx: CanvasRenderingContext2D,
+  handles: Float64Array,
+  size: number,
+  style: { readonly fill: string; readonly accent: string },
+): void {
+  const half = size / 2;
+  ctx.lineWidth = 1;
+  for (let i = 0; i + 2 <= handles.length; i += 2) {
+    const x = handles[i] ?? 0;
+    const y = handles[i + 1] ?? 0;
+    ctx.fillStyle = style.fill;
+    ctx.fillRect(x - half, y - half, size, size);
+    ctx.strokeStyle = style.accent;
+    ctx.strokeRect(x - half, y - half, size, size);
+  }
+}

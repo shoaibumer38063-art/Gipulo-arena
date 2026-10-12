@@ -79,4 +79,24 @@ test.describe('1,000-rectangle fixture (AC-24)', () => {
     expect(deltas.length).toBeGreaterThan(20);
     expect(value).toBeLessThanOrEqual(32);
   });
+
+  test('resizing a selected rectangle keeps p95 frame interval within 32 ms', async ({ page }) => {
+    await openFixture(page, 'rects-1000');
+    const canvas = await page.getByTestId('editor-canvas').boundingBox();
+    if (!canvas) throw new Error('canvas has no box');
+    // Rect 1 is at world (40, 40), 48×36. Its SE corner is at (88, 76).
+    await page.keyboard.press('v');
+    await page.mouse.click(canvas.x + 64, canvas.y + 58);
+    await expect(page.getByTestId('size-readout')).toHaveText('48 × 36');
+    const deltas = await recordFrames(page, async () => {
+      await page.mouse.move(canvas.x + 88, canvas.y + 76);
+      await page.mouse.down();
+      await page.mouse.move(canvas.x + 288, canvas.y + 176, { steps: 60 });
+      await page.mouse.up();
+    });
+    const value = p95(deltas);
+    console.log(`rects-1000 resize: frames=${deltas.length} p95=${value.toFixed(1)}ms`);
+    expect(deltas.length).toBeGreaterThan(20);
+    expect(value).toBeLessThanOrEqual(32);
+  });
 });

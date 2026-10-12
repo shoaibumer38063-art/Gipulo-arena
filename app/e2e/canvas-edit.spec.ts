@@ -103,3 +103,50 @@ test.describe('editor canvas edits (Slice 0b)', () => {
     await expect(page.getByTestId('view-readout')).toHaveText('Zoom 100% · origin 30, 10');
   });
 });
+
+test.describe('resize handles (Slice 1)', () => {
+  const size = (page: Page) => page.getByTestId('size-readout');
+
+  test('dragging the SE handle resizes the selected rectangle', async ({ page }) => {
+    await openReady(page);
+    await page.keyboard.press('r');
+    await drag(page, await at(page, 200, 200), await at(page, 320, 260));
+    await page.keyboard.press('v'); // the Rectangle tool is sticky; resize needs Select
+    await expect(size(page)).toHaveText('120 × 60');
+    await drag(page, await at(page, 320, 260), await at(page, 360, 290));
+    await expect(size(page)).toHaveText('160 × 90');
+  });
+
+  test('Escape cancels a resize and undo reverts it', async ({ page }) => {
+    await openReady(page);
+    await page.keyboard.press('r');
+    await drag(page, await at(page, 200, 200), await at(page, 320, 260));
+    await page.keyboard.press('v'); // the Rectangle tool is sticky; resize needs Select
+    const se = await at(page, 320, 260);
+    await page.mouse.move(se.x, se.y);
+    await page.mouse.down();
+    await page.mouse.move((await at(page, 360, 290)).x, (await at(page, 360, 290)).y, { steps: 4 });
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(size(page)).toHaveText('120 × 60');
+
+    await drag(page, se, await at(page, 360, 290));
+    await expect(size(page)).toHaveText('160 × 90');
+    await page.keyboard.press('Control+z');
+    await expect(size(page)).toHaveText('120 × 60');
+  });
+
+  test('Shift keeps the aspect ratio on a corner handle', async ({ page }) => {
+    await openReady(page);
+    await page.keyboard.press('r');
+    await drag(page, await at(page, 200, 200), await at(page, 320, 260));
+    await page.keyboard.press('v'); // the Rectangle tool is sticky; resize needs Select
+    const se = await at(page, 320, 260);
+    await page.keyboard.down('Shift');
+    await drag(page, se, await at(page, 380, 260));
+    await page.keyboard.up('Shift');
+    // 120×60 is 2:1; the pointer moved +60 in x only, so the larger scale (1.5) sets 180×90.
+    await expect(size(page)).toHaveText('180 × 90');
+  });
+});
+

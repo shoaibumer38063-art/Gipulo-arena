@@ -12,7 +12,7 @@ import init, { Engine, protocol_version, rect_stride } from '../../../bindings/p
 
 /** Shell-side mirror of `PROTOCOL_VERSION` in core/crates/gip-session. Keep in sync — the
  * handshake exists precisely to catch drift (a mismatch is a clear error, never silence). */
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 /**
  * Verifies the core's reported protocol version against the shell's expectation.
@@ -55,8 +55,12 @@ export interface EngineHandle {
   view(): EngineView;
   /** Pointer pressed (client pixels). button 0 = primary, 1 = middle (pan). */
   pointerDown(clientX: number, clientY: number, button: number, shift: boolean): boolean;
-  /** Pointer moved (client pixels). */
-  pointerMove(clientX: number, clientY: number): boolean;
+  /** Pointer moved (client pixels). Shift and Alt change an active resize (CAN-TR-3). */
+  pointerMove(clientX: number, clientY: number, shift: boolean, alt: boolean): boolean;
+  /** Resize handles of the single resize target: 8 (x, y) points, NW, N, NE, E, SE, S, SW, W. */
+  handles(): Float64Array;
+  /** World box [x, y, w, h] of the single selected object; empty when there is none. */
+  selectionBounds(): Float64Array;
   /** Pointer released (client pixels). */
   pointerUp(clientX: number, clientY: number): boolean;
   /** Cancels the running gesture with no history entry (pointercancel). */
@@ -112,7 +116,9 @@ function wrap(engine: Engine, protocolVersion: number): EngineHandle {
     rectStride: rect_stride(),
     openJson: (text) => engine.open_json(text),
     pointerDown: (x, y, button, shift) => engine.pointer_down(x, y, button, shift),
-    pointerMove: (x, y) => engine.pointer_move(x, y),
+    pointerMove: (x, y, shift, alt) => engine.pointer_move(x, y, shift, alt),
+    handles: () => engine.handles(),
+    selectionBounds: () => engine.selection_bounds(),
     pointerUp: (x, y) => engine.pointer_up(x, y),
     cancel: () => engine.cancel(),
     escape: () => engine.escape(),

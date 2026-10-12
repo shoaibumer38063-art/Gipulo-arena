@@ -1,6 +1,6 @@
 # Task 021 — Editor Slice 1: resize with handles (PLAN)
 
-- **Date:** 2026-10-12 · **Roadmap:** step 20 (after Slice 0) · **Status:** PLAN, awaiting owner review before code
+- **Date:** 2026-10-12 · **Roadmap:** step 20 (after Slice 0) · **Status:** DONE (see task summary 021)
 - **Predecessor:** Slice 0 complete (020a–020c), on GitHub at `8d961bd`.
 - **Rules read:** `rules/canvas.md` CAN-SEL-6, CAN-TR-1..3, CAN-TR-6, CAN-GEOM-5, CAN-CAM-5,
   CAN-HIST-2, CAN-MODE-1/2/4, CAN-INPUT-2, performance §26 (pointer→visual ≤ 2 frames p95 during resize).
@@ -75,4 +75,4 @@ summary (`021`) at completion.
 
 ## 7. Status
 
-PLAN ONLY. No code written. Start only after owner go-ahead (and the D1–D3 choices).
+Done. D1 clamp, D2 12 px clickable square, D3 protocol bump, all as recommended. Summary: `2026-10-12_021_editor_slice1_resize.md`.

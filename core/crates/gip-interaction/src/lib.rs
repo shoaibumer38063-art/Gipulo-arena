@@ -13,5 +13,6 @@
 pub mod machine;
 
 pub use machine::{
-    Commit, DRAG_THRESHOLD_PX, Effect, HIT_TOLERANCE_PX, Interaction, MoveItem, Preview, Tool, View,
+    Commit, DRAG_THRESHOLD_PX, Effect, HANDLE_SLOP_PX, HIT_TOLERANCE_PX, Handle, Interaction,
+    Modifiers, MoveItem, Preview, Rect4, Tool, View, handle_points, resize_box, resize_target,
 };

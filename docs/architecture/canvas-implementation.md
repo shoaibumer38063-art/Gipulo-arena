@@ -1,4 +1,4 @@
-# Canvas — Implementation Map (Slice 0a–0c)
+# Canvas — Implementation Map (Slice 0a–1)
 
 > Companion to `canvas.md` (the hub). Status: ACTIVE for Slice 0a (2026-10-11, task 020). Binding rules: `rules/canvas.md` (read §0,
 > §3–§5, §7, §8, §11, §13, §22, §25–§28 before changing this map). This file maps the rules to code.
@@ -18,6 +18,7 @@
 | Interaction state machine (gestures, tool, selection, hover, zero-size hit tolerance) | `core/crates/gip-interaction/src/machine.rs` (ADR-012 D2) | CAN-MODE-1/2/4, CAN-INPUT-2 |
 | Document edits, history | `gip-session` commits each gesture as one `History::transact` (`session.rs`); `gip-history`, `gip-document` | CAN-HIST-1..4 |
 | Rectangle transform and hit-testing | `gip-geometry::trs_of` + `Mat2::from_trs` / `world_to_local` (`machine.rs::hit_test`) | CAN-GEOM-1..6 |
+| Resize handles | `machine.rs` (`Handle`, `resize_box`, `handle_points`); drawn by `paint.ts::paintHandles` | CAN-SEL-6, CAN-TR-1..3 |
 | Selection and hover | `machine.rs` (`Interaction::selection`, `hover`); outline drawn by `paint.ts::paintRects` | CAN-SEL-1, 2, 5, 6 |
 | Keyboard shortcuts | `app/src/canvas/shortcuts.ts` (registry + pure matcher) | rules I1 |
 
@@ -55,7 +56,16 @@
 - Repaints coalesce to one per animation frame in `CanvasHost` (pointer state still updates per event).
 - AC-24 frame pacing measured headless: pan and drag p95 under 17 ms on the 1,000-object fixture.
 
+## 2d. Slice 1 (resize)
+
+- Eight handles on the single selected, unrotated, unflipped object; 12 px activation (`HANDLE_SLOP_PX`).
+- Resize math in `gip-interaction::resize_box` (corner, edge, Shift, Alt, clamp at zero).
+- Commit `Resize` writes X, Y, W, H as one history entry; Escape restores exactly.
+- Size readout (`size-readout`); handles drawn with `--handle-size` (token).
+
 ## 3. Known gaps (recorded, not hidden)
+
+- Handle cursor hints (CAN-CUR-2): not built. Rotated and flipped objects have no handles. Multi-object resize and resize snapping are later slices.
 
 - Marquee (drag-select on empty canvas): out of scope for Slice 0; a drag from empty canvas does nothing.
 - Zero-size objects are hit within an 8 px screen tolerance (CAN-GEOM-5, `HIT_TOLERANCE_PX`, [PROPOSED]).
