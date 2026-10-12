@@ -50,7 +50,23 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [snap, setSnap] = useState<Snapshot>(() => readSnapshot(engine));
 
-  const refresh = useCallback(() => setSnap(readSnapshot(engine)), [engine]);
+  // Coalesce repaints to one per animation frame. Pointer events can arrive faster than frames;
+  // each one changes the core's state immediately, but the shell only re-reads and repaints once
+  // per frame (AC-24 frame budget).
+  const frameRef = useRef<number | null>(null);
+  const refresh = useCallback(() => {
+    if (frameRef.current !== null) return;
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      setSnap(readSnapshot(engine));
+    });
+  }, [engine]);
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    },
+    [],
+  );
 
   // Keep the engine's viewport in step with the element's client rect (CAN-CAM-5).
   useEffect(() => {
@@ -92,6 +108,24 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       hoverAlpha: Number.parseFloat(styles.getPropertyValue('--opacity-muted')) || 0.6,
     });
   }, [snap]);
+
+  // Test and benchmark hook: `?fixture=<name>` opens `/fixtures/<name>.gip` (a committed golden
+  // document, see fixtures/README.md). Names are restricted to a safe character set.
+  useEffect(() => {
+    const name = new URLSearchParams(window.location.search).get('fixture');
+    if (!name || !/^[a-z0-9-]+$/.test(name)) return;
+    let cancelled = false;
+    fetch(`/fixtures/${name}.gip`)
+      .then((response) => response.text())
+      .then((text) => {
+        if (cancelled) return;
+        if (!engine.openJson(text)) console.error(`fixture ${name} is not a valid document`);
+        refresh();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [engine, refresh]);
 
   // Wheel needs a NON-passive native listener so preventDefault stops page scrolling.
   useEffect(() => {

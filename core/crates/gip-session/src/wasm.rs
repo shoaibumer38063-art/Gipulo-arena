@@ -136,6 +136,17 @@ impl Engine {
         self.session.escape();
     }
 
+    /// Replaces the document with `.gip` text. Returns `false` (nothing changes) if the text is
+    /// not a valid document.
+    pub fn open_json(&mut self, text: &str) -> bool {
+        self.session.open_json(text).is_ok()
+    }
+
+    /// Serializes the document as `.gip` text. Returns an empty string if it cannot be saved.
+    pub fn save_json(&self) -> String {
+        self.session.save_json().unwrap_or_default()
+    }
+
     /// Sets the tool: `"select"` or `"rectangle"`. Returns `false` for unknown names or during
     /// a gesture.
     pub fn set_tool(&mut self, name: &str) -> bool {

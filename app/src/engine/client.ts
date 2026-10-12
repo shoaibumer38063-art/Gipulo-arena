@@ -12,7 +12,7 @@ import init, { Engine, protocol_version, rect_stride } from '../../../bindings/p
 
 /** Shell-side mirror of `PROTOCOL_VERSION` in core/crates/gip-session. Keep in sync — the
  * handshake exists precisely to catch drift (a mismatch is a clear error, never silence). */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /**
  * Verifies the core's reported protocol version against the shell's expectation.
@@ -84,6 +84,8 @@ export interface EngineHandle {
   rects(): Float64Array;
   /** Floats per record in `rects()`. */
   readonly rectStride: number;
+  /** Replaces the document with `.gip` text. Returns false (nothing changes) if invalid. */
+  openJson(text: string): boolean;
 }
 
 let started: Promise<EngineHandle> | undefined;
@@ -108,6 +110,7 @@ function wrap(engine: Engine, protocolVersion: number): EngineHandle {
   return {
     protocolVersion,
     rectStride: rect_stride(),
+    openJson: (text) => engine.open_json(text),
     pointerDown: (x, y, button, shift) => engine.pointer_down(x, y, button, shift),
     pointerMove: (x, y) => engine.pointer_move(x, y),
     pointerUp: (x, y) => engine.pointer_up(x, y),

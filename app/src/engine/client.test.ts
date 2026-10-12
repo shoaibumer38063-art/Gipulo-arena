@@ -13,6 +13,6 @@ describe('engine boundary handshake (engine-core.md §10)', () => {
   });
 
   it('keeps the shell mirror at the view-boundary protocol version', () => {
-    expect(PROTOCOL_VERSION).toBe(2);
+    expect(PROTOCOL_VERSION).toBe(3);
   });
 });

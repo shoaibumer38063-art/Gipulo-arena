@@ -208,6 +208,17 @@ impl Session {
         done
     }
 
+    /// Replaces the document with one parsed from `.gip` text (ADR-003). The view and tool are
+    /// kept; the selection and any gesture are reset. On error nothing changes.
+    pub fn open_json(&mut self, text: &str) -> Result<(), String> {
+        let file = gip_document::from_json(text).map_err(|e| e.to_string())?;
+        let history = History::new(file).map_err(|e| e.to_string())?;
+        self.history = history;
+        self.machine.cancel();
+        self.machine.set_selection(&[]);
+        Ok(())
+    }
+
     /// Serializes the document (validated; ADR-003). Used by round-trip tests and, later, by
     /// file I/O.
     pub fn save_json(&self) -> Result<String, String> {
@@ -834,5 +845,49 @@ mod interaction_tests {
         let reloaded = gip_document::from_json(&saved).expect("saved text reloads");
         let resaved = gip_document::to_json(&reloaded).expect("reloaded document validates");
         assert_eq!(saved, resaved, "save → load → save is stable");
+    }
+
+    fn insert_zero_width_line(s: &mut Session) {
+        let node = Node::new(
+            NodeKind::Rectangle,
+            "line",
+            Transform {
+                x: 100.0,
+                y: 100.0,
+                w: 0.0,
+                h: 100.0,
+                rotation_deg: 0.0,
+                flip_h: false,
+                flip_v: false,
+            },
+        );
+        let page = s.history.document().pages()[0].id;
+        let ok = s.history.transact(IntentLabel::new("test"), |tx| {
+            let id = tx.alloc_id()?;
+            tx.insert(Parent::Page(page), 0, vec![(id, node)])?;
+            Ok(id)
+        });
+        assert!(ok.is_ok());
+    }
+
+    #[test]
+    fn zero_width_object_is_addressable_within_the_screen_tolerance() {
+        // CAN-GEOM-5: a zero-size object is hit within a fixed screen distance at any zoom.
+        for zoom in [0.05, 1.0, 32.0] {
+            let mut s = session();
+            insert_zero_width_line(&mut s);
+            assert!(s.zoom_at(0.0, 0.0, zoom / s.snapshot().zoom));
+            // The line sits at x = 100 world = 100·zoom screen. Probe 4 px off it.
+            let x = 100.0 * zoom;
+            let near = 4.0;
+            assert!(s.pointer_down(x + near, 200.0 * zoom, 0, false));
+            assert!(s.pointer_up(x + near, 200.0 * zoom));
+            assert_eq!(s.selection_count(), 1, "hit within 8 px at zoom {zoom}");
+            s.escape();
+            // 20 px off is outside the tolerance.
+            assert!(s.pointer_down(x + 20.0, 200.0 * zoom, 0, false));
+            assert!(s.pointer_up(x + 20.0, 200.0 * zoom));
+            assert_eq!(s.selection_count(), 0, "miss beyond 8 px at zoom {zoom}");
+        }
     }
 }

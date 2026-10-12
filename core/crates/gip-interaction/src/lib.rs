@@ -12,4 +12,6 @@
 
 pub mod machine;
 
-pub use machine::{Commit, DRAG_THRESHOLD_PX, Effect, Interaction, MoveItem, Preview, Tool, View};
+pub use machine::{
+    Commit, DRAG_THRESHOLD_PX, Effect, HIT_TOLERANCE_PX, Interaction, MoveItem, Preview, Tool, View,
+};

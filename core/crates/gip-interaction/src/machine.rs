@@ -8,6 +8,10 @@ use gip_geometry::trs_of;
 /// Pixels the pointer must travel after pressing before a gesture becomes a drag (CAN-INPUT-2).
 pub const DRAG_THRESHOLD_PX: f64 = 3.0;
 
+/// Screen-space hit tolerance for zero-size objects (CAN-GEOM-5): they stay addressable at any
+/// zoom. [PROPOSED] value; the rule's point-handle equivalent is 16 px, so the radius is half that.
+pub const HIT_TOLERANCE_PX: f64 = 8.0;
+
 /// The active tool (CAN-MODE-1). Pan is a gesture (middle button), not a tool.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tool {
@@ -434,10 +438,13 @@ fn normalized(a: Vec2, b: Vec2) -> (f64, f64, f64, f64) {
 }
 
 /// Topmost visible, unlocked node whose rectangle contains `world` (CAN-SEL-1, CAN-SEL-2).
+/// A zero-width or zero-height object is hit within [`HIT_TOLERANCE_PX`] of its degenerate
+/// outline (CAN-GEOM-5).
 #[must_use]
-pub fn hit_test(doc: &Document, _view: View, world: Vec2) -> Option<NodeId> {
+pub fn hit_test(doc: &Document, view: View, world: Vec2) -> Option<NodeId> {
     let page = doc.pages().first()?;
     let nodes = doc.nodes();
+    let tolerance_world = HIT_TOLERANCE_PX / view.camera.zoom;
     page.children.iter().rev().copied().find(|id| {
         let Some(node) = nodes.get(id) else {
             return false;
@@ -445,8 +452,33 @@ pub fn hit_test(doc: &Document, _view: View, world: Vec2) -> Option<NodeId> {
         if !node.visible || node.locked {
             return false;
         }
-        let m = Mat2::from_trs(trs_of(&node.transform));
-        m.world_to_local(world)
-            .is_some_and(|l| (0.0..=1.0).contains(&l.x) && (0.0..=1.0).contains(&l.y))
+        let t = node.transform;
+        let m = Mat2::from_trs(trs_of(&t));
+        if t.w > 0.0 && t.h > 0.0 {
+            m.world_to_local(world)
+                .is_some_and(|l| (0.0..=1.0).contains(&l.x) && (0.0..=1.0).contains(&l.y))
+        } else {
+            degenerate_distance(m, t.w > 0.0, t.h > 0.0, world) <= tolerance_world
+        }
     })
+}
+
+/// Distance from `world` to the outline of a zero-size object. The unit square collapses along
+/// each zero dimension, leaving a segment (or a point when both are zero).
+fn degenerate_distance(m: Mat2, has_w: bool, has_h: bool, world: Vec2) -> f64 {
+    let origin = m.apply(Vec2::new(0.0, 0.0));
+    let far = match (has_w, has_h) {
+        (false, false) => return origin.distance_sq(world).sqrt(),
+        (false, true) => m.apply(Vec2::new(0.0, 1.0)),
+        (true, false) => m.apply(Vec2::new(1.0, 0.0)),
+        (true, true) => return f64::INFINITY,
+    };
+    let ab = far - origin;
+    let len_sq = ab.length_sq();
+    let t = if len_sq == 0.0 {
+        0.0
+    } else {
+        ((world - origin).dot(ab) / len_sq).clamp(0.0, 1.0)
+    };
+    (origin + ab.scale(t)).distance_sq(world).sqrt()
 }
