@@ -58,3 +58,64 @@ export function paintFrame(
     ctx.stroke();
   }
 }
+
+/** Flag bits in a rect record (see the core's `Engine.rects`). */
+export const RECT_FLAG_SELECTED = 1;
+export const RECT_FLAG_HOVERED = 2;
+export const RECT_FLAG_PREVIEW = 4;
+
+/** Object and selection counts for the status readout. */
+export function objectReadout(objects: number, selected: number): string {
+  const noun = objects === 1 ? 'object' : 'objects';
+  return `${objects} ${noun} · ${selected} selected`;
+}
+
+/** Colors and hover opacity for rectangles, read from tokens by the caller. */
+export interface RectPaintStyle {
+  readonly fill: string;
+  readonly accent: string;
+  readonly hoverAlpha: number;
+}
+
+/**
+ * Paints the core's draw list. Each rectangle is a polygon of core-computed viewport corners.
+ * Selection is a 1 px outline with no handles (Slice 0, CAN-SEL-5). Hover is the same outline at
+ * reduced opacity (CAN-SEL-6). A creation preview is a dashed outline.
+ */
+export function paintRects(
+  ctx: CanvasRenderingContext2D,
+  rects: Float64Array,
+  stride: number,
+  style: RectPaintStyle,
+): void {
+  ctx.lineWidth = 1;
+  for (let i = 0; i + stride <= rects.length; i += stride) {
+    const flags = rects[i + 8] ?? 0;
+    ctx.beginPath();
+    ctx.moveTo(rects[i] ?? 0, rects[i + 1] ?? 0);
+    ctx.lineTo(rects[i + 2] ?? 0, rects[i + 3] ?? 0);
+    ctx.lineTo(rects[i + 4] ?? 0, rects[i + 5] ?? 0);
+    ctx.lineTo(rects[i + 6] ?? 0, rects[i + 7] ?? 0);
+    ctx.closePath();
+    const preview = (flags & RECT_FLAG_PREVIEW) !== 0;
+    if (!preview) {
+      ctx.fillStyle = style.fill;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (preview) {
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = style.accent;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if ((flags & RECT_FLAG_SELECTED) !== 0) {
+      ctx.strokeStyle = style.accent;
+      ctx.stroke();
+    } else if ((flags & RECT_FLAG_HOVERED) !== 0) {
+      ctx.globalAlpha = style.hoverAlpha;
+      ctx.strokeStyle = style.accent;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+}

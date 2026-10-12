@@ -29,3 +29,51 @@
   border-radius: var(--radius-xs);
   pointer-events: none;
 }
+
+.canvas-host__counts {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font: var(--type-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+  border-radius: var(--radius-xs);
+  pointer-events: none;
+}
+
+.canvas-host__tools {
+  position: absolute;
+  left: var(--space-2);
+  top: var(--space-2);
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-panel);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-button);
+}
+
+.canvas-host__tool {
+  font: var(--type-body-medium);
+  color: var(--text-primary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-xs);
+  padding: var(--space-1) var(--space-3);
+  cursor: default;
+}
+
+.canvas-host__tool:hover {
+  background: var(--bg-hover);
+}
+
+.canvas-host__tool[aria-pressed='true'] {
+  background: var(--bg-selected);
+  color: var(--accent-lo);
+}
+
+.canvas-host__tool:focus-visible {
+  outline: var(--stroke-default) solid var(--border-focus);
+}

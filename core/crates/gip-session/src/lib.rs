@@ -15,7 +15,7 @@
 
 /// Boundary protocol version — the shell↔core handshake (engine-core.md §10). A mismatch is a
 /// clear startup error, never silent misbehavior. Bump on every breaking boundary change.
-pub const PROTOCOL_VERSION: u32 = 1;
+pub const PROTOCOL_VERSION: u32 = 2;
 
 /// Core crates re-exported as the native facade surface (tests, tools, CI consumers).
 pub use gip_coords as coords;
@@ -28,7 +28,7 @@ pub use gip_scene as scene;
 pub use gip_text as text;
 
 pub mod session;
-pub use session::{Session, ViewSnapshot};
+pub use session::{RectOp, Session, ViewSnapshot};
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;
@@ -46,7 +46,7 @@ mod tests {
     }
 
     #[test]
-    fn protocol_version_is_one_after_the_view_boundary_was_added() {
-        assert_eq!(PROTOCOL_VERSION, 1);
+    fn protocol_version_is_two_after_the_interaction_boundary_was_added() {
+        assert_eq!(PROTOCOL_VERSION, 2);
     }
 }

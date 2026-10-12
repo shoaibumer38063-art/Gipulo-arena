@@ -261,6 +261,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "gip-interaction"
+version = "0.0.0"
+dependencies = [
+ "gip-coords",
+ "gip-document",
+ "gip-geometry",
+]
+
+[[package]]
 name = "gip-layout"
 version = "0.0.0"
 dependencies = [
@@ -297,6 +306,7 @@ dependencies = [
  "gip-document",
  "gip-geometry",
  "gip-history",
+ "gip-interaction",
  "gip-layout",
  "gip-render",
  "gip-scene",

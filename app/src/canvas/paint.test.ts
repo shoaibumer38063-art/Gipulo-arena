@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type { EngineView } from '../engine/client';
-import { originCrosshair, viewReadout } from './paint';
+import { objectReadout, originCrosshair, viewReadout } from './paint';
 
 function view(overrides: Partial<EngineView> = {}): EngineView {
   return {
@@ -47,6 +47,14 @@ describe('view readout', () => {
   });
 });
 
+describe('object readout', () => {
+  it('counts objects and the selection', () => {
+    expect(objectReadout(0, 0)).toBe('0 objects · 0 selected');
+    expect(objectReadout(1, 1)).toBe('1 object · 1 selected');
+    expect(objectReadout(3, 0)).toBe('3 objects · 0 selected');
+  });
+});
+
 describe('boundary law: the canvas shell performs no coordinate conversion (CAN-COORD-2)', () => {
   const dir = join(process.cwd(), 'src', 'canvas');
   const sources = readdirSync(dir)
@@ -55,7 +63,7 @@ describe('boundary law: the canvas shell performs no coordinate conversion (CAN-
     .map((f) => ({ name: f, text: readFileSync(join(dir, f), 'utf8') }));
 
   it('finds the canvas sources', () => {
-    expect(sources.map((s) => s.name).sort()).toEqual(['CanvasHost.tsx', 'paint.ts']);
+    expect(sources.map((s) => s.name).sort()).toEqual(['CanvasHost.tsx', 'paint.ts', 'shortcuts.ts']);
   });
 
   it.each([

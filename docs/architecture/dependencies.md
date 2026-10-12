@@ -30,6 +30,7 @@ gipulo/
 | `gip-layout` | document, geometry, coords | **none** |
 | `gip-text` | document, geometry, coords | **none** |
 | `gip-history` | document | **none** |
+| `gip-interaction` | document, coords, geometry | **none** (Slice 0b, ADR-012 D2) |
 | `gip-scene` | document, geometry, coords | **none** |
 | `gip-render` | document, geometry, coords, scene | **wgpu only** |
 | `gip-session` | all of the above | **wasm-bindgen only** (wasm32 target only) |

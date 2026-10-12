@@ -21,6 +21,7 @@ gip-geometry = { path = "../gip-geometry" }
 gip-layout = { path = "../gip-layout" }
 gip-text = { path = "../gip-text" }
 gip-history = { path = "../gip-history" }
+gip-interaction = { path = "../gip-interaction" }
 gip-scene = { path = "../gip-scene" }
 gip-render = { path = "../gip-render" }
 

@@ -1,0 +1,16 @@
+[package]
+name = "gip-interaction"
+description = "Canvas interaction state machine (CAN-MODE, CAN-SEL, CAN-INPUT). Contract: docs/architecture/canvas.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gip-document = { path = "../gip-document" }
+gip-coords = { path = "../gip-coords" }
+gip-geometry = { path = "../gip-geometry" }

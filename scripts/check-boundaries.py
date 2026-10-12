@@ -27,6 +27,7 @@ ALL_CRATES = [
     "gip-layout",
     "gip-text",
     "gip-history",
+    "gip-interaction",
     "gip-scene",
     "gip-render",
     "gip-session",
@@ -41,6 +42,7 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
     "gip-history": {"gip-document"},
     "gip-scene": {"gip-document", "gip-geometry", "gip-coords"},
     "gip-render": {"gip-document", "gip-geometry", "gip-coords", "gip-scene"},
+    "gip-interaction": {"gip-document", "gip-coords", "gip-geometry"},
     "gip-session": {c for c in ALL_CRATES if c != "gip-session"},
 }
 
