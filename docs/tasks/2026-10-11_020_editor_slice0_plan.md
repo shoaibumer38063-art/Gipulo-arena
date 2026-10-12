@@ -28,7 +28,7 @@ paints the draw list and forwards pointer events. Nothing in (a)–(d) exists ye
 
 **In scope (user-visible):**
 1. Infinite canvas with **pan** (space-drag / middle-drag / two-finger trackpad) and **zoom**
-   (wheel and ⌘/Ctrl-wheel, pointer-anchored) — zoom limits 5 %–3200 % (CAN-CAM / CAN-SS-4).
+   (wheel and ⌘/Ctrl-wheel, pointer-anchored) — zoom is clamped to 2 %–4096 % (CAN-CAM-3, enforced by `gip-coords`); the behavior is verified across 5 %–3200 % (CAN-SS-4 tests).
 2. **Rectangle tool** (`R`): press-drag-release creates a Rectangle node with the drag box as its
    transform; press-without-drag creates nothing.
 3. **Selection**: click selects the top-most visible rectangle whose precise fill contains the point
@@ -70,7 +70,7 @@ shell canvas host: paints the draw list; reports pointer events; NO geometry, NO
 conversion (viewport → world → parent → local) happens in `gip-coords`. The shell contains no `* zoom + pan`
 arithmetic.
 
-**Render path (decision D1):** the core emits a draw list; the shell paints it. Slice 0 uses a Canvas2D
+**Render path (decision D1, approved A):** the core emits a draw list; the shell paints it. Slice 0 uses a Canvas2D
 painter in the shell as the bootstrap surface, which rendering.md §3 permits for debug/bootstrap
 only. It has no geometry or conversion logic. The wgpu renderer stays the target for the next slice.
 
@@ -80,7 +80,7 @@ only. It has no geometry or conversion logic. The wgpu renderer stays the target
 - AC-1 Round-trip `viewport → world → viewport` within 1e-9 at zooms 0.05, 0.25, 1, 4, 32 and at fractional and negative coordinates (CAN-COORD invariant).
 - AC-2 Pointer-anchored zoom keeps the anchor point's world position fixed within 1e-9.
 - AC-3 Pan and zoom never change the document (history length and document hash unchanged).
-- AC-4 Camera clamps at 5 % and 3200 % zoom.
+- AC-4 Camera clamps at 2 % and 4096 % zoom (CAN-CAM-3 as implemented in `gip-coords`); interaction tests verify 5 %–3200 %.
 
 **Creation**
 - AC-5 Press-drag-release with the rectangle tool creates exactly one Rectangle whose world box equals the drag box (with normalized negative-direction drags).
@@ -144,14 +144,14 @@ save/reload round trip in a real browser.
 - **Text, vector edit, layers, properties:** separate slices with their own ADRs (CAN-TEXT-4 keeps
   text-on-path proposal-stage).
 
-## 7. Decisions needed from the owner (blocking the build)
+## 7. Decisions (owner-approved 2026-10-11: all recommended options, A)
 
 | ID | Question | Recommendation |
 |---|---|---|
 | **D1** | Bootstrap painter: Canvas2D painter in the shell over a core draw list (fast to build, replaced by wgpu later) **or** wgpu from the start (no shell painter; harder; headless tests may lack WebGPU) | **Canvas2D bootstrap**, documented as temporary, replaced by the wgpu renderer in the next slice. Permitted by rendering.md §3 for bootstrap. |
 | **D2** | Where the interaction state machine lives: inside `gip-session` (simplest) **or** a new crate `gip-interaction` (clearer boundary; needs a registry row and an ADR) | **New crate `gip-interaction`** with an ADR, so the state machine stays testable without the Wasm facade. |
 | **D3** | Protocol: intents as typed Rust enums serialized through wasm-bindgen (JSON-free) **or** JSON strings across the boundary | **Typed wasm-bindgen methods** for hot paths (pointer move), with snapshot as a plain struct; no JSON on the hot path. |
-| **D4** | Include Shift-click multi-select and Delete key in Slice 0 | **Yes** (both are small and covered by the matrix). |
+| **D4** | Include Shift-click multi-select and Delete key in Slice 0 | **Yes** (both are small and covered by the matrix). **APPROVED: A.** |
 
 ## 8. Documentation updates the implementing task must make
 
@@ -185,4 +185,4 @@ split into three sub-tasks, each green before the next:
 
 ## 11. Status
 
-Awaiting owner answers to D1–D4. Build starts with 020a after approval.
+D1–D4 approved (all option A). Build starts with 020a. Rules not yet read are listed in the header and must be read before the relevant code.

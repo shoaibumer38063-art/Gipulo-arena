@@ -202,6 +202,14 @@ must be logged here with date, what changed, and why.
 
 - Leaf size 8 → 2 in `SegmentIndex`: 1.08 ms → 0.60 ms per query (dense 1000-seg fixture), results identical. 131 workspace tests green; clippy, fmt, wasm, boundary checks clean.
 
+## 2026-10-11 — Task 020a: editor view boundary, canvas host, pan and zoom
+
+- **Core:** `gip-session` `Session` + `ViewSnapshot`; validated `set_viewport`, `zoom_at`, `pan_by`; zoom percent computed in the core. Browser binding `Engine`/`ViewState` (transport only). **Protocol 0 → 1.**
+- **Shell:** `CanvasHost` forwards raw pointer/wheel input (middle-drag pan, wheel/trackpad pan, ctrl/⌘-wheel zoom); `paint.ts` paints the core's view; no conversion arithmetic (lint-tested).
+- **Decisions:** ADR-012 accepted (Canvas2D bootstrap; gip-interaction planned; typed boundary).
+- **Recorded deviation:** the shell's transitional pan gesture variable (CAN-MODE-2) moves into gip-interaction in Slice 0b.
+- **Tests:** 146 Rust (10 new in gip-session); 55 Vitest; 5 Playwright E2E.
+
 ## 2026-10-11 — Task 020: editor Slice 0 plan (no code)
 
 - **What:** plan with 28 testable acceptance criteria, the canvas-rule checklist, deliberate deferrals (handles, snapping, text), and four blocking decisions (D1 bootstrap painter, D2 interaction state machine home, D3 boundary protocol shape, D4 multi-select and Delete in Slice 0).

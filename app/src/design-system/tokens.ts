@@ -117,6 +117,7 @@ export const TOKEN_NAMES = [
   'control-h',
   'field-h',
   'row-h',
+  'canvas-host-h',
   'menu-item-h',
   'tab-h',
   'toolbar-h',

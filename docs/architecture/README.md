@@ -11,6 +11,7 @@ is the placement law: core/shell ownership table + the Rust/Wasm ⇄ TypeScript 
 | Doc | Scope |
 |---|---|
 | `canvas.md` | **Hub** — subsystem map, dependency direction, frame lifecycle, open questions |
+| `canvas.md` | Canvas implementation map: responsibility → code → rule IDs (rules/canvas.md) | ACTIVE (Slice 0a) |
 | `engine-core.md` | **Placement law** — core/shell ownership table, Rust/Wasm ⇄ TS boundary protocol, memory/threading/error policy, testing pyramid |
 | `document-tree.md` | `.gip` document model: node types, container contracts, components, text nodes |
 | `coordinate-system.md` | The 8 spaces, canonical conversion module, camera store |
@@ -66,6 +67,7 @@ understand why it existed.
 | `ADR-010-webgl2-parity.md` | WebGL2 fallback parity tiers: WebGPU is T1; the shared path is render-only (no compute, no storage buffers); effects degrade by a declared rule and show a badge | **ACCEPTED (2026-10-11, owner delegation)** |
 | `ADR-011-text-shaping.md` | Text shaping = harfrust; font parsing = skrifa/read-fonts; rustybuzz and ttf-parser rejected (unmaintained); deps added only when the text feature starts | **ACCEPTED (2026-10-11, owner delegation)** |
 | `ADR-009-document-hash-and-nfc.md` | documentHash = SHA-256 of the document section (written on save, verified on load); strings must be NFC (rejected, never rewritten); deps sha2 + unicode-normalization | **ACCEPTED (2026-10-11, owner delegation)** |
+| `ADR-012-editor-boundary-and-bootstrap.md` | Editor boundary: Canvas2D bootstrap painter (D1); interaction machine in new crate gip-interaction (D2); typed boundary calls, protocol 1 (D3) | **ACCEPTED (2026-10-11, owner approved recommended options)** |
 | `ADR-008-recovery-and-integrity.md` | P0-class: trap recovery from committed whole-file snapshots; autosave cadence (2 s debounce, 30 s max); 3 generations; telemetry-free local diagnostics; fault-injection feature (release-excluded) | **PROPOSED (2026-10-11)** — owner review on cadence, retention, clean-close, copy |
 
 Full requirements: `../memory/03_documentation_system.md` §6–7.

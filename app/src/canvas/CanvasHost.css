@@ -1,0 +1,31 @@
+/* Editor canvas host. Tokens only (no hard-coded values outside the token layer). */
+.canvas-host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: var(--canvas-host-h);
+  background: var(--bg-canvas);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.canvas-host__surface {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  touch-action: none;
+  cursor: default;
+}
+
+.canvas-host__readout {
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font: var(--type-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+  border-radius: var(--radius-xs);
+  pointer-events: none;
+}

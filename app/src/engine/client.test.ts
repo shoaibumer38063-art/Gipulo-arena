@@ -12,7 +12,7 @@ describe('engine boundary handshake (engine-core.md §10)', () => {
     expect(() => assertProtocolVersion(PROTOCOL_VERSION + 1)).toThrow(/rebuild the wasm bindings/);
   });
 
-  it('keeps the shell mirror at the scaffold protocol version', () => {
-    expect(PROTOCOL_VERSION).toBe(0);
+  it('keeps the shell mirror at the view-boundary protocol version', () => {
+    expect(PROTOCOL_VERSION).toBe(1);
   });
 });

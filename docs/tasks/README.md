@@ -28,6 +28,7 @@ Entries so far:
 - `2026-10-11_005_repo-scaffold.md` — repo scaffold: core crates, shell, wasm pipeline, CI, fixtures (zero editor features).
 - `2026-10-11_006_design_system_formalization.md` — 14 Design System docs: tokens, components with all states, canvas UI + closed guide-color language, cursors, motion, a11y audit, responsive, research notes.
 - `2026-10-11_007_design_system_implementation.md` — DS code v1: drift-tested token layer, 17 registry entries (15 components + tokens + scrollbar) with 47 state tests, gallery story page, editor-frame demo.
+- `2026-10-11_020a_view_boundary.md` — Slice 0a DONE: view boundary (protocol 1), canvas host, pan and zoom; ADR-012; 146 Rust + 55 unit + 5 E2E green.
 - `2026-10-11_020_editor_slice0_plan.md` — editor Slice 0 plan (no code): scope, architecture placement, 28 acceptance criteria, decisions D1–D4 awaiting owner.
 - `2026-10-11_018_webgl2_text_adrs.md` — ADR-010 (WebGL2 parity tiers) and ADR-011 (harfrust + skrifa, rustybuzz archived). Docs-only.
 - `2026-10-11_017_document_hash_nfc.md` — ADR-009: documentHash (SHA-256) written and verified; NFC enforced on save/load. Deps sha2 + unicode-normalization registered.

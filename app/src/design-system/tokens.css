@@ -151,6 +151,8 @@
   --control-h: 24px;
   --field-h: 28px;
   --row-h: 28px;
+  /* Editor canvas host height (layout metric; task 020a). Viewport-relative by design. */
+  --canvas-host-h: 60vh;
   --menu-item-h: 24px;
   --tab-h: 40px;
   --toolbar-h: 40px;

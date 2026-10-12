@@ -1,25 +1,26 @@
 import { useEffect, useState } from 'react';
 
+import { CanvasHost } from './canvas/CanvasHost';
 import { Gallery } from './design-system/gallery/Gallery';
-import { loadEngine } from './engine/client';
+import { type EngineHandle, loadEngine } from './engine/client';
 import './App.css';
 
 type EngineState =
   | { readonly kind: 'starting' }
-  | { readonly kind: 'ready'; readonly protocolVersion: number }
+  | { readonly kind: 'ready'; readonly engine: EngineHandle }
   | { readonly kind: 'error'; readonly message: string };
 
-// The shell currently hosts the Design System gallery — the foundation preview surface.
-// Real editor UI arrives only after the foundation is accepted (no editor features yet).
-// The status line proves the shell ↔ core handshake end to end (engine-core.md §10).
+// The shell hosts the editor canvas (view only in Slice 0a: pan and zoom, no document edits yet)
+// above the Design System gallery. The status line proves the shell ↔ core handshake end to end
+// (engine-core.md §10).
 export function App() {
   const [engine, setEngine] = useState<EngineState>({ kind: 'starting' });
 
   useEffect(() => {
     let alive = true;
     loadEngine().then(
-      ({ protocolVersion }) => {
-        if (alive) setEngine({ kind: 'ready', protocolVersion });
+      (handle) => {
+        if (alive) setEngine({ kind: 'ready', engine: handle });
       },
       (error: unknown) => {
         if (alive) setEngine({ kind: 'error', message: error instanceof Error ? error.message : String(error) });
@@ -34,9 +35,10 @@ export function App() {
     <>
       <output className="engine-status" data-engine-status={engine.kind} aria-live="polite">
         {engine.kind === 'starting' && 'Engine: starting…'}
-        {engine.kind === 'ready' && `Engine ready · protocol ${engine.protocolVersion}`}
+        {engine.kind === 'ready' && `Engine ready · protocol ${engine.engine.protocolVersion}`}
         {engine.kind === 'error' && `Engine error: ${engine.message}`}
       </output>
+      {engine.kind === 'ready' && <CanvasHost engine={engine.engine} />}
       <Gallery />
     </>
   );
