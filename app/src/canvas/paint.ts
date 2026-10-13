@@ -130,6 +130,21 @@ export function sizeReadout(bounds: Float64Array): string {
  * Paints the resize handles as squares centered on the core's handle points. `size` is the
  * visual edge length in screen pixels, read from the `--handle-size` token by the caller.
  */
+/**
+ * Snap guides: one segment per `[x1, y1, x2, y2]` quad, in viewport pixels. The core computes the
+ * lines; the shell only strokes them (CAN-OVL-2).
+ */
+export function paintGuides(ctx: CanvasRenderingContext2D, guides: Float64Array, color: string): void {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (let i = 0; i + 4 <= guides.length; i += 4) {
+    ctx.beginPath();
+    ctx.moveTo(guides[i] ?? 0, guides[i + 1] ?? 0);
+    ctx.lineTo(guides[i + 2] ?? 0, guides[i + 3] ?? 0);
+    ctx.stroke();
+  }
+}
+
 export function paintHandles(
   ctx: CanvasRenderingContext2D,
   handles: Float64Array,

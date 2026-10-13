@@ -10,9 +10,13 @@
 
 #![forbid(unsafe_code)]
 
+pub mod group;
 pub mod machine;
+pub mod snap;
 
 pub use machine::{
-    Commit, DRAG_THRESHOLD_PX, Effect, HANDLE_SLOP_PX, HIT_TOLERANCE_PX, Handle, Interaction,
-    Modifiers, MoveItem, Preview, Rect4, Tool, View, handle_points, resize_box, resize_target,
+    Axis, Commit, DRAG_THRESHOLD_PX, Effect, HANDLE_SLOP_PX, HIT_TOLERANCE_PX, Handle, Interaction,
+    Modifiers, MoveItem, Preview, ROTATE_RADIUS_PX, ROTATE_STEP_DEG, Rect4, Tool, TransformItem,
+    View, center_of, flip_transform, handle_points, resize_box, resize_cursor, resize_target,
+    resize_transform, rotate_transform, unit_mapping,
 };

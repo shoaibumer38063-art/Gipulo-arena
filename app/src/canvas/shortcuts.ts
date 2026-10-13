@@ -10,7 +10,9 @@ export type ShortcutAction =
   | 'edit.delete'
   | 'edit.undo'
   | 'edit.redo'
-  | 'edit.cancel';
+  | 'edit.cancel'
+  | 'edit.flipH'
+  | 'edit.flipV';
 
 /** One binding. `key` is compared case-insensitively. `mod` = Ctrl or ⌘. */
 export interface ShortcutBinding {
@@ -28,6 +30,8 @@ export const SHORTCUTS: readonly ShortcutBinding[] = [
   { action: 'edit.undo', key: 'z', mod: true },
   { action: 'edit.redo', key: 'z', mod: true, shift: true },
   { action: 'edit.cancel', key: 'Escape' },
+  { action: 'edit.flipH', key: 'h', shift: true },
+  { action: 'edit.flipV', key: 'v', shift: true },
 ];
 
 /** The keyboard fields the matcher reads (a subset of KeyboardEvent). */

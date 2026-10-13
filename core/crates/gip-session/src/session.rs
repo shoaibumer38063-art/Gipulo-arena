@@ -12,9 +12,9 @@ use gip_coords::{Camera, Mat2, Vec2, ViewportRect};
 use gip_document::{FieldKey, FieldValue, GipFile, Node, NodeId, NodeKind, Transform};
 use gip_geometry::trs_of;
 use gip_history::{History, IntentLabel, Parent};
+use gip_interaction::machine::{effective_transform, selection_frame};
 use gip_interaction::{
-    Commit, Effect, Interaction, Modifiers, Preview, Rect4, Tool, View, handle_points,
-    resize_target,
+    Axis, Commit, Effect, Interaction, Modifiers, Preview, Rect4, Tool, View, handle_points,
 };
 
 /// Document salt for documents created by the session (Slice 0; a real salt comes with file I/O).
@@ -140,6 +140,18 @@ impl Session {
 
     /// Pointer moved. Returns `false` for non-finite input.
     pub fn pointer_move(&mut self, client_x: f64, client_y: f64, shift: bool, alt: bool) -> bool {
+        self.pointer_move_snap(client_x, client_y, shift, alt, false)
+    }
+
+    /// Pointer moved with every modifier, including ⌘ / Ctrl which turns snapping off.
+    pub fn pointer_move_snap(
+        &mut self,
+        client_x: f64,
+        client_y: f64,
+        shift: bool,
+        alt: bool,
+        snap_off: bool,
+    ) -> bool {
         let Some(client) = finite(client_x, client_y) else {
             return false;
         };
@@ -148,7 +160,11 @@ impl Session {
             self.history.document(),
             view,
             client,
-            Modifiers { shift, alt },
+            Modifiers {
+                shift,
+                alt,
+                snap_off,
+            },
         );
         self.apply(effects);
         true
@@ -310,14 +326,14 @@ impl Session {
     #[must_use]
     pub fn handles(&self) -> Vec<f64> {
         let doc = self.history.document();
-        let Some(id) = resize_target(doc, self.machine.selection()) else {
+        let Some(frame) = selection_frame(doc, self.machine.selection(), &self.machine.preview())
+        else {
             return Vec::new();
         };
-        let Some(node) = doc.nodes().get(&id) else {
+        if !frame.resizable {
             return Vec::new();
-        };
-        let t = effective_transform(&self.machine.preview(), id, node.transform);
-        handle_points(&t)
+        }
+        handle_points(&frame.transform)
             .iter()
             .flat_map(|p| {
                 let v = self.camera.world_to_viewport(*p);
@@ -326,17 +342,66 @@ impl Session {
             .collect()
     }
 
-    /// World box `(x, y, w, h)` of the single selected object, for the size readout.
+    /// World box `(x, y, w, h)` of the selection (the object, or the group box), for the size readout.
     #[must_use]
     pub fn selection_bounds(&self) -> Option<Rect4> {
+        let frame = selection_frame(
+            self.history.document(),
+            self.machine.selection(),
+            &self.machine.preview(),
+        )?;
+        let t = frame.transform;
+        // `x`/`y` are the matrix translation, which for a flipped object is the far edge, so
+        // the readout is taken around the center: identical when unflipped and unrotated.
+        let c = gip_interaction::machine::center_of(&t);
+        Some((c.x - t.w / 2.0, c.y - t.h / 2.0, t.w, t.h))
+    }
+
+    /// Snap guides for the gesture in progress, as flat viewport segments `[x1, y1, x2, y2, …]`.
+    #[must_use]
+    pub fn guides(&self) -> Vec<f64> {
+        let mut out = Vec::new();
+        for g in self.machine.guides() {
+            let (a, b) = if g.vertical {
+                (Vec2::new(g.pos, g.from), Vec2::new(g.pos, g.to))
+            } else {
+                (Vec2::new(g.from, g.pos), Vec2::new(g.to, g.pos))
+            };
+            for p in [a, b] {
+                let v = self.camera.world_to_viewport(p);
+                out.push(v.x);
+                out.push(v.y);
+            }
+        }
+        out
+    }
+
+    /// Rotation of the single selected object, in degrees (−180…180), or 0 when none.
+    #[must_use]
+    pub fn selection_rotation(&self) -> f64 {
         let selection = self.machine.selection();
         let [id] = selection else {
-            return None;
+            return 0.0;
         };
         let doc = self.history.document();
-        let node = doc.nodes().get(id)?;
-        let t = effective_transform(&self.machine.preview(), *id, node.transform);
-        Some((t.x, t.y, t.w, t.h))
+        doc.nodes().get(id).map_or(0.0, |node| {
+            effective_transform(&self.machine.preview(), *id, node.transform).rotation_deg
+        })
+    }
+
+    /// Flips the selection about each object's center (Shift+H / Shift+V). One history entry.
+    /// Returns `false` when nothing was flipped.
+    pub fn flip(&mut self, axis: Axis) -> bool {
+        let effects = self.machine.flip_selection(self.history.document(), axis);
+        let before = self.history.file().clone();
+        self.apply(effects);
+        self.history.file() != &before
+    }
+
+    /// The cursor the shell should show for the current pointer state (CAN-CUR-1).
+    #[must_use]
+    pub fn cursor(&self) -> &'static str {
+        self.machine.cursor()
     }
 
     fn view(&self) -> View {
@@ -386,13 +451,22 @@ impl Session {
                     self.machine.set_selection(&[id]);
                 }
             }
-            Commit::Resize { node, to, .. } => {
-                let (x, y, w, h) = to;
-                let _ = self.history.transact(IntentLabel::new("resize"), |tx| {
-                    tx.set_field(node, FieldKey::X, FieldValue::Number(x))?;
-                    tx.set_field(node, FieldKey::Y, FieldValue::Number(y))?;
-                    tx.set_field(node, FieldKey::W, FieldValue::Number(w))?;
-                    tx.set_field(node, FieldKey::H, FieldValue::Number(h))?;
+            Commit::Transform { items } => {
+                let _ = self.history.transact(IntentLabel::new("transform"), |tx| {
+                    for item in &items {
+                        let t = item.to;
+                        tx.set_field(item.node, FieldKey::X, FieldValue::Number(t.x))?;
+                        tx.set_field(item.node, FieldKey::Y, FieldValue::Number(t.y))?;
+                        tx.set_field(item.node, FieldKey::W, FieldValue::Number(t.w))?;
+                        tx.set_field(item.node, FieldKey::H, FieldValue::Number(t.h))?;
+                        tx.set_field(
+                            item.node,
+                            FieldKey::Rotation,
+                            FieldValue::Number(t.rotation_deg),
+                        )?;
+                        tx.set_field(item.node, FieldKey::FlipH, FieldValue::Flag(t.flip_h))?;
+                        tx.set_field(item.node, FieldKey::FlipV, FieldValue::Flag(t.flip_v))?;
+                    }
                     Ok(())
                 });
             }
@@ -418,23 +492,6 @@ impl Session {
             }
         }
     }
-}
-
-/// A node's transform with any live gesture preview applied (move or resize).
-fn effective_transform(preview: &Preview, id: NodeId, mut t: Transform) -> Transform {
-    match preview {
-        Preview::Moving { items } => {
-            if let Some((_, (x, y))) = items.iter().find(|(n, _)| *n == id) {
-                t.x = *x;
-                t.y = *y;
-            }
-        }
-        Preview::Resizing { node, rect } if *node == id => {
-            (t.x, t.y, t.w, t.h) = *rect;
-        }
-        _ => {}
-    }
-    t
 }
 
 fn finite(x: f64, y: f64) -> Option<Vec2> {
@@ -1119,5 +1176,406 @@ mod resize_tests {
             approx(w, 114.0),
             "gesture delta is measured from the press point: got {w}"
         );
+    }
+}
+
+#[cfg(test)]
+mod rotate_tests {
+    use super::*;
+
+    fn session() -> Session {
+        let mut s = Session::new();
+        assert!(s.set_viewport(0.0, 0.0, 800.0, 600.0));
+        s
+    }
+
+    fn drag_mods(s: &mut Session, from: (f64, f64), to: (f64, f64), shift: bool) {
+        assert!(s.pointer_down(from.0, from.1, 0, false));
+        assert!(s.pointer_move(from.0 + 4.0, from.1 + 4.0, shift, false));
+        assert!(s.pointer_move(to.0, to.1, shift, false));
+        assert!(s.pointer_up(to.0, to.1));
+    }
+
+    /// Creates a 100×50 rectangle at (100, 100) and leaves it selected. Center (150, 125).
+    fn rect(s: &mut Session) {
+        assert!(s.set_tool(Tool::Rectangle));
+        drag_mods(s, (100.0, 100.0), (200.0, 150.0), false);
+        assert!(s.set_tool(Tool::Select));
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+    }
+
+    /// Screen point `deg` degrees (clockwise, y down) around the center (150, 125) at radius `r`.
+    fn around(deg: f64, r: f64) -> (f64, f64) {
+        let a = deg.to_radians();
+        (150.0 + r * a.cos(), 125.0 + r * a.sin())
+    }
+
+    /// The NW rotate zone: just outside the NW corner (100, 100), 10 px along the diagonal.
+    fn nw_rotate_press() -> (f64, f64) {
+        (100.0 - 7.0, 100.0 - 7.0)
+    }
+
+    fn start_deg_and_radius() -> (f64, f64) {
+        let (px, py) = nw_rotate_press();
+        let d = (py - 125.0).atan2(px - 150.0).to_degrees();
+        let r = ((px - 150.0).powi(2) + (py - 125.0).powi(2)).sqrt();
+        (d, r)
+    }
+
+    fn rotate_by(s: &mut Session, change_deg: f64, shift: bool) {
+        let (d, r) = start_deg_and_radius();
+        let to = around(d + change_deg, r);
+        drag_mods(s, nw_rotate_press(), to, shift);
+    }
+
+    #[test]
+    fn rotate_zone_rotates_about_the_center_by_the_angular_change() {
+        let mut s = session();
+        rect(&mut s);
+        rotate_by(&mut s, 30.0, false);
+        assert!((s.selection_rotation() - 30.0).abs() < 1e-6);
+        assert_eq!(
+            s.selection_bounds().map(|b| b.2),
+            s.selection_bounds().map(|b| b.2)
+        );
+    }
+
+    #[test]
+    fn shift_snaps_the_rotation_to_fifteen_degrees() {
+        let mut s = session();
+        rect(&mut s);
+        rotate_by(&mut s, 22.0, true);
+        assert!((s.selection_rotation() - 15.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn rotation_is_one_entry_and_undo_restores_zero() {
+        let mut s = session();
+        rect(&mut s);
+        rotate_by(&mut s, 45.0, false);
+        assert!(s.undo());
+        assert!(s.selection_rotation().abs() < 1e-12);
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+    }
+
+    #[test]
+    fn escape_during_rotate_restores_the_exact_transform() {
+        let mut s = session();
+        rect(&mut s);
+        let before = s.rects();
+        let (d, r) = start_deg_and_radius();
+        let (px, py) = nw_rotate_press();
+        assert!(s.pointer_down(px, py, 0, false));
+        assert!(s.pointer_move(px + 4.0, py + 4.0, false, false));
+        let (tx, ty) = around(d + 60.0, r);
+        assert!(s.pointer_move(tx, ty, false, false));
+        s.escape();
+        assert!(s.pointer_up(tx, ty));
+        assert_eq!(s.rects(), before);
+        assert!(s.undo());
+        assert_eq!(s.object_count(), 0, "only the create is in history");
+    }
+
+    #[test]
+    fn flip_twice_restores_the_rects_exactly_and_flip_once_is_one_entry() {
+        let mut s = session();
+        rect(&mut s);
+        let before = s.rects();
+        assert!(s.flip(Axis::Horizontal));
+        assert_eq!(
+            s.selection_bounds(),
+            Some((100.0, 100.0, 100.0, 50.0)),
+            "flip keeps the box"
+        );
+        assert!(s.undo(), "flip is one entry");
+        assert_eq!(s.rects(), before);
+        assert!(s.flip(Axis::Horizontal));
+        assert!(s.flip(Axis::Horizontal));
+        assert_eq!(s.rects(), before, "two flips restore exactly");
+    }
+
+    #[test]
+    fn a_thousand_back_and_forth_rotations_do_not_drift() {
+        let mut s = session();
+        rect(&mut s);
+        let before = s.rects();
+        for _ in 0..1000 {
+            rotate_by(&mut s, 7.0, false);
+            rotate_by(&mut s, -7.0, false);
+        }
+        assert!(
+            s.selection_rotation().abs() < 1e-6,
+            "no drift: {}",
+            s.selection_rotation()
+        );
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+        let _ = before;
+    }
+
+    #[test]
+    fn cursor_hints_follow_the_control_under_the_pointer() {
+        let mut s = session();
+        rect(&mut s);
+        let (px, py) = nw_rotate_press();
+        assert!(s.pointer_move(px, py, false, false));
+        assert_eq!(s.cursor(), "grab", "rotate zone");
+        assert!(s.pointer_move(100.0, 100.0, false, false));
+        assert_eq!(s.cursor(), "nwse-resize", "NW corner");
+        assert!(s.pointer_move(400.0, 400.0, false, false));
+        assert_eq!(s.cursor(), "default", "empty canvas");
+    }
+
+    #[test]
+    fn cursor_follows_the_rotated_axes() {
+        let mut s = session();
+        rect(&mut s);
+        rotate_by(&mut s, 90.0, false);
+        // E handle after a quarter turn: its direction is now vertical on screen.
+        let (d, r) = start_deg_and_radius();
+        let _ = (d, r);
+        let (ex, ey) = {
+            let t = s.rects();
+            let _ = t;
+            // The E handle sits 50 px from the center along the rotated local x axis.
+            let a = (s.selection_rotation()).to_radians();
+            (150.0 + 50.0 * a.cos(), 125.0 + 50.0 * a.sin())
+        };
+        assert!(s.pointer_move(ex, ey, false, false));
+        assert_eq!(s.cursor(), "ns-resize");
+    }
+
+    #[test]
+    fn a_flipped_object_resizes_from_the_handle_under_the_pointer() {
+        let mut s = session();
+        rect(&mut s);
+        assert!(s.flip(Axis::Horizontal));
+        // Flipped about its center, the box still spans [100, 200]; the E handle is now the left edge.
+        drag_mods(&mut s, (100.0, 125.0), (70.0, 125.0), false);
+        assert_eq!(s.selection_bounds(), Some((70.0, 100.0, 130.0, 50.0)));
+        assert!(s.undo(), "the resize is one entry");
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 100.0, 50.0)));
+    }
+}
+
+#[cfg(test)]
+mod group_tests {
+    use super::*;
+
+    fn approx(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-6
+    }
+
+    /// Two rectangles: A at (100, 100) 100×50 and B at (300, 200) 60×40, both selected.
+    /// The group box is (100, 100, 260, 140), center (230, 170).
+    fn two_selected() -> Session {
+        let mut s = Session::new();
+        assert!(s.set_viewport(0.0, 0.0, 800.0, 600.0));
+        assert!(s.set_tool(Tool::Rectangle));
+        assert!(s.pointer_down(100.0, 100.0, 0, false));
+        assert!(s.pointer_move(200.0, 150.0, false, false));
+        assert!(s.pointer_up(200.0, 150.0));
+        assert!(s.pointer_down(300.0, 200.0, 0, false));
+        assert!(s.pointer_move(360.0, 240.0, false, false));
+        assert!(s.pointer_up(360.0, 240.0));
+        assert!(s.set_tool(Tool::Select));
+        assert!(s.pointer_down(150.0, 125.0, 0, false));
+        assert!(s.pointer_up(150.0, 125.0));
+        assert!(s.pointer_down(330.0, 220.0, 0, true));
+        assert!(s.pointer_up(330.0, 220.0));
+        assert_eq!(s.selection_count(), 2);
+        s
+    }
+
+    fn gesture(s: &mut Session, path: &[(f64, f64)]) {
+        let (x0, y0) = path[0];
+        assert!(s.pointer_down(x0, y0, 0, false));
+        assert!(s.pointer_move(x0 + 4.0, y0 + 4.0, false, false));
+        for &(x, y) in &path[1..path.len() - 1] {
+            assert!(s.pointer_move(x, y, false, false));
+        }
+        let (x, y) = path[path.len() - 1];
+        assert!(s.pointer_move(x, y, false, false));
+        assert!(s.pointer_up(x, y));
+    }
+
+    #[test]
+    fn two_objects_share_one_group_box_and_handles() {
+        let s = two_selected();
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 260.0, 140.0)));
+        assert_eq!(
+            s.handles().len(),
+            16,
+            "axis-aligned group shows eight handles"
+        );
+    }
+
+    #[test]
+    fn group_resize_scales_the_box_as_one_entry() {
+        let mut s = two_selected();
+        // SE handle of the group at (360, 240), dragged by (+40, +20).
+        gesture(&mut s, &[(360.0, 240.0), (400.0, 260.0)]);
+        let (x, y, w, h) = s.selection_bounds().expect("group");
+        assert!(approx(x, 100.0) && approx(y, 100.0) && approx(w, 300.0) && approx(h, 160.0));
+        assert!(s.undo());
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 260.0, 140.0)));
+    }
+
+    #[test]
+    fn group_rotate_turns_the_group_about_its_center() {
+        let mut s = two_selected();
+        let pivot = (230.0_f64, 170.0_f64);
+        let press = (93.0_f64, 93.0_f64); // NW rotate zone of the group box
+        let r = ((press.0 - pivot.0).powi(2) + (press.1 - pivot.1).powi(2)).sqrt();
+        let a0 = (press.1 - pivot.1).atan2(press.0 - pivot.0);
+        let a1 = a0 + std::f64::consts::FRAC_PI_2;
+        let to = (pivot.0 + r * a1.cos(), pivot.1 + r * a1.sin());
+        gesture(&mut s, &[press, to]);
+        // Turning 90° swaps the group's width and height about the same center.
+        let (x, y, w, h) = s.selection_bounds().expect("group");
+        assert!(approx(w, 140.0) && approx(h, 260.0), "got {w}×{h}");
+        assert!(approx(x + w / 2.0, pivot.0) && approx(y + h / 2.0, pivot.1));
+        assert!(s.undo(), "the rotate is one entry");
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 260.0, 140.0)));
+    }
+
+    #[test]
+    fn rotated_members_hide_the_group_resize_handles() {
+        let mut s = two_selected();
+        let pivot = (230.0_f64, 170.0_f64);
+        let press = (93.0_f64, 93.0_f64);
+        let r = ((press.0 - pivot.0).powi(2) + (press.1 - pivot.1).powi(2)).sqrt();
+        let a1 = (press.1 - pivot.1).atan2(press.0 - pivot.0) + 0.3;
+        let to = (pivot.0 + r * a1.cos(), pivot.1 + r * a1.sin());
+        gesture(&mut s, &[press, to]);
+        assert!(
+            s.handles().is_empty(),
+            "rotated members are not group-resizable"
+        );
+    }
+
+    #[test]
+    fn escape_during_a_group_rotate_restores_every_member() {
+        let mut s = two_selected();
+        let before = s.rects();
+        let press = (93.0_f64, 93.0_f64);
+        assert!(s.pointer_down(press.0, press.1, 0, false));
+        assert!(s.pointer_move(press.0 - 4.0, press.1 - 4.0, false, false));
+        assert!(s.pointer_move(40.0, 300.0, false, false));
+        s.escape();
+        assert!(s.pointer_up(40.0, 300.0));
+        assert_eq!(s.rects(), before);
+        assert!(s.undo());
+        assert_eq!(
+            s.object_count(),
+            1,
+            "the Escaped gesture left no entry; undo removes B's create"
+        );
+    }
+}
+
+#[cfg(test)]
+mod snap_tests {
+    use super::*;
+
+    fn approx(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-9
+    }
+
+    /// A: (100, 100) 100×50 (right edge 200). B: (300, 200) 60×40 (left edge 300). Select tool.
+    fn two() -> Session {
+        let mut s = Session::new();
+        assert!(s.set_viewport(0.0, 0.0, 800.0, 600.0));
+        assert!(s.set_tool(Tool::Rectangle));
+        assert!(s.pointer_down(100.0, 100.0, 0, false));
+        assert!(s.pointer_move(200.0, 150.0, false, false));
+        assert!(s.pointer_up(200.0, 150.0));
+        assert!(s.pointer_down(300.0, 200.0, 0, false));
+        assert!(s.pointer_move(360.0, 240.0, false, false));
+        assert!(s.pointer_up(360.0, 240.0));
+        assert!(s.set_tool(Tool::Select));
+        s
+    }
+
+    /// Press at `from`, drag to `to` (with optional snap-off), release.
+    fn drag_snap(s: &mut Session, from: (f64, f64), to: (f64, f64), snap_off: bool) {
+        assert!(s.pointer_down(from.0, from.1, 0, false));
+        assert!(s.pointer_move_snap(from.0 + 4.0, from.1 + 4.0, false, false, snap_off));
+        assert!(s.pointer_move_snap(to.0, to.1, false, false, snap_off));
+        assert!(s.pointer_up(to.0, to.1));
+    }
+
+    fn select_b(s: &mut Session) {
+        assert!(s.pointer_down(330.0, 220.0, 0, false));
+        assert!(s.pointer_up(330.0, 220.0));
+        assert_eq!(s.selection_count(), 1);
+    }
+
+    #[test]
+    fn a_move_snaps_the_nearest_edge_within_four_pixels() {
+        let mut s = two();
+        select_b(&mut s);
+        // Raw left edge 201.5 is 1.5 px from A's right edge (200): it snaps there.
+        drag_snap(&mut s, (330.0, 220.0), (231.5, 220.0), false);
+        assert_eq!(s.selection_bounds(), Some((200.0, 200.0, 60.0, 40.0)));
+    }
+
+    #[test]
+    fn ctrl_or_cmd_turns_snapping_off_for_the_gesture() {
+        let mut s = two();
+        select_b(&mut s);
+        drag_snap(&mut s, (330.0, 220.0), (231.5, 220.0), true);
+        assert_eq!(s.selection_bounds(), Some((201.5, 200.0, 60.0, 40.0)));
+    }
+
+    #[test]
+    fn a_held_snap_releases_only_past_six_pixels() {
+        let mut s = two();
+        select_b(&mut s);
+        assert!(s.pointer_down(330.0, 220.0, 0, false));
+        assert!(s.pointer_move_snap(334.0, 224.0, false, false, false));
+        // Snap at 200 (raw 201.5).
+        assert!(s.pointer_move_snap(231.5, 220.0, false, false, false));
+        // Raw 204.5 is 4.5 px away: outside activation, inside release, so the snap holds.
+        assert!(s.pointer_move_snap(234.5, 220.0, false, false, false));
+        assert!(approx(s.selection_bounds().expect("selected").0, 200.0));
+        // Raw 207.5 is 7.5 px away: released.
+        assert!(s.pointer_move_snap(237.5, 220.0, false, false, false));
+        assert!(approx(s.selection_bounds().expect("selected").0, 207.5));
+        assert!(s.pointer_up(237.5, 220.0));
+    }
+
+    #[test]
+    fn a_snapped_move_shows_a_guide_until_the_gesture_ends() {
+        let mut s = two();
+        select_b(&mut s);
+        assert!(s.pointer_down(330.0, 220.0, 0, false));
+        assert!(s.pointer_move_snap(334.0, 224.0, false, false, false));
+        assert!(s.pointer_move_snap(231.5, 220.0, false, false, false));
+        let g = s.guides();
+        assert_eq!(g.len(), 4, "one vertical guide: two points");
+        assert!(approx(g[0], g[2]), "vertical: same x");
+        assert!(s.pointer_up(231.5, 220.0));
+        assert!(s.guides().is_empty());
+    }
+
+    #[test]
+    fn a_resize_snaps_the_grabbed_edge_to_another_object() {
+        let mut s = two();
+        assert!(s.pointer_down(150.0, 125.0, 0, false));
+        assert!(s.pointer_up(150.0, 125.0)); // select A
+        // A's east handle at (200, 125), dragged so its edge lands 1.5 px short of B's left (300).
+        drag_snap(&mut s, (200.0, 125.0), (298.5, 125.0), false);
+        assert_eq!(s.selection_bounds(), Some((100.0, 100.0, 200.0, 50.0)));
+    }
+
+    #[test]
+    fn creating_snaps_the_dragged_corner() {
+        let mut s = two();
+        assert!(s.set_tool(Tool::Rectangle));
+        assert!(s.pointer_down(50.0, 50.0, 0, false));
+        assert!(s.pointer_move(200.0, 120.0, false, false));
+        assert!(s.pointer_move(298.5, 160.0, false, false));
+        assert!(s.pointer_up(298.5, 160.0));
+        assert_eq!(s.selection_bounds(), Some((50.0, 50.0, 250.0, 110.0)));
     }
 }

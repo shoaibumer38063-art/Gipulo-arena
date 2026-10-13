@@ -12,7 +12,7 @@ import init, { Engine, protocol_version, rect_stride } from '../../../bindings/p
 
 /** Shell-side mirror of `PROTOCOL_VERSION` in core/crates/gip-session. Keep in sync — the
  * handshake exists precisely to catch drift (a mismatch is a clear error, never silence). */
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 6;
 
 /**
  * Verifies the core's reported protocol version against the shell's expectation.
@@ -55,10 +55,24 @@ export interface EngineHandle {
   view(): EngineView;
   /** Pointer pressed (client pixels). button 0 = primary, 1 = middle (pan). */
   pointerDown(clientX: number, clientY: number, button: number, shift: boolean): boolean;
-  /** Pointer moved (client pixels). Shift and Alt change an active resize (CAN-TR-3). */
-  pointerMove(clientX: number, clientY: number, shift: boolean, alt: boolean): boolean;
+  /**
+   * Pointer moved (client pixels). Shift snaps rotation and keeps resize proportional; Alt resizes
+   * from the center (CAN-TR-3, CAN-TR-4). `snapOff` (⌘ / Ctrl) turns snapping off for the gesture.
+   */
+  pointerMove(clientX: number, clientY: number, shift: boolean, alt: boolean, snapOff: boolean): boolean;
+  /**
+   * Snap guides for the gesture in progress, as flat viewport segments `[x1, y1, x2, y2, …]`.
+   * Empty when nothing is snapped (CAN-SNAP-7).
+   */
+  guides(): Float64Array;
   /** Resize handles of the single resize target: 8 (x, y) points, NW, N, NE, E, SE, S, SW, W. */
   handles(): Float64Array;
+  /** Rotation in degrees (−180…180) of the single selected object; 0 when there is none. */
+  selectionRotation(): number;
+  /** Flips the selection about each object's center: 'h' or 'v'. One history entry. */
+  flip(axis: 'h' | 'v'): boolean;
+  /** CSS cursor keyword for the action the next press would start (CAN-CUR-1). */
+  cursor(): string;
   /** World box [x, y, w, h] of the single selected object; empty when there is none. */
   selectionBounds(): Float64Array;
   /** Pointer released (client pixels). */
@@ -116,9 +130,13 @@ function wrap(engine: Engine, protocolVersion: number): EngineHandle {
     rectStride: rect_stride(),
     openJson: (text) => engine.open_json(text),
     pointerDown: (x, y, button, shift) => engine.pointer_down(x, y, button, shift),
-    pointerMove: (x, y, shift, alt) => engine.pointer_move(x, y, shift, alt),
+    pointerMove: (x, y, shift, alt, snapOff) => engine.pointer_move(x, y, shift, alt, snapOff),
+    guides: () => engine.guides(),
     handles: () => engine.handles(),
     selectionBounds: () => engine.selection_bounds(),
+    selectionRotation: () => engine.selection_rotation(),
+    flip: (axis) => engine.flip(axis),
+    cursor: () => engine.cursor(),
     pointerUp: (x, y) => engine.pointer_up(x, y),
     cancel: () => engine.cancel(),
     escape: () => engine.escape(),

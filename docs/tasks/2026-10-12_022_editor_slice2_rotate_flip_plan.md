@@ -18,6 +18,7 @@ In scope:
 - One history entry per rotate, flip, or resize gesture; Escape restores exactly (CAN-MODE-4).
 
 Out of scope (deferred):
+- Resize of **flipped** objects: handles hidden while flipped (see Status).
 - Rotating or resizing **several** objects at once (needs multi-bounds; a later slice).
 - Snapping and guides (CAN-SNAP): their own slice (snap budget then measured).
 - Text, vector edit, layers, properties, groups, file UI.
@@ -62,4 +63,9 @@ About 600 lines of core and tests, and 300 lines of shell and E2E. One task summ
 
 ## 7. Status
 
-PLAN ONLY. No code is written until D1–D3 are answered.
+APPROVED (D1 keep flip flags, D2 −180…180°, D3 cursor hints included). Implemented in task 022
+(`2026-10-12_022_editor_slice2_rotate_flip.md`).
+
+**Recorded deferral (lifted in task 023):** resize of a **flipped** object was not offered in this slice. Handles are hidden
+while an object is flipped (`resize_target` excludes flipped nodes). Flip itself works. Lifting this
+needs the resize math to handle mirrored local axes; it is a later slice.

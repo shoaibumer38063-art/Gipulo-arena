@@ -99,4 +99,31 @@ test.describe('1,000-rectangle fixture (AC-24)', () => {
     expect(deltas.length).toBeGreaterThan(20);
     expect(value).toBeLessThanOrEqual(32);
   });
+  test('rotating a selected rectangle keeps p95 frame interval within 32 ms', async ({ page }) => {
+    await openFixture(page, 'rects-1000');
+    const canvas = await page.getByTestId('editor-canvas').boundingBox();
+    if (!canvas) throw new Error('canvas has no box');
+    // Rect 1 is at world (40, 40), 48×36: center (64, 58). Its NW rotate zone is at (30, 30).
+    await page.keyboard.press('v');
+    await page.mouse.click(canvas.x + 64, canvas.y + 58);
+    await expect(page.getByTestId('size-readout')).toHaveText('48 × 36');
+    const cx = 64;
+    const cy = 58;
+    const r = Math.hypot(30 - cx, 30 - cy);
+    const start = Math.atan2(30 - cy, 30 - cx);
+    const deltas = await recordFrames(page, async () => {
+      await page.mouse.move(canvas.x + 30, canvas.y + 30);
+      await page.mouse.down();
+      for (let i = 1; i <= 60; i++) {
+        const a = start + (Math.PI * i) / 60; // a half turn, one step per frame
+        await page.mouse.move(canvas.x + cx + r * Math.cos(a), canvas.y + cy + r * Math.sin(a));
+      }
+      await page.mouse.up();
+    });
+    await expect(page.getByTestId('rotation-readout')).toHaveText('180°');
+    const value = p95(deltas);
+    console.log(`rects-1000 rotate: frames=${deltas.length} p95=${value.toFixed(1)}ms`);
+    expect(deltas.length).toBeGreaterThan(20);
+    expect(value).toBeLessThanOrEqual(32);
+  });
 });

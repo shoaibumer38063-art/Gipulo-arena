@@ -28,6 +28,13 @@ describe('shortcut registry', () => {
     expect(matchShortcut(press('r', { ctrlKey: true }))).toBeUndefined();
   });
 
+  it('maps Shift+H and Shift+V to flips, not to the tools', () => {
+    expect(matchShortcut(press('H', { shiftKey: true }))).toBe('edit.flipH');
+    expect(matchShortcut(press('V', { shiftKey: true }))).toBe('edit.flipV');
+    expect(matchShortcut(press('v'))).toBe('tool.select');
+    expect(matchShortcut(press('h'))).toBeUndefined();
+  });
+
   it('has no two bindings for the same key and modifiers', () => {
     const keys = SHORTCUTS.map((b) => `${b.key.toLowerCase()}|${b.mod ?? false}|${b.shift ?? false}`);
     expect(new Set(keys).size).toBe(keys.length);

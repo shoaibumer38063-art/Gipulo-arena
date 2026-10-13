@@ -9,7 +9,7 @@
 use wasm_bindgen::prelude::*;
 
 use crate::{PROTOCOL_VERSION, RectOp, Session, ViewSnapshot};
-use gip_interaction::Tool;
+use gip_interaction::{Axis, Tool};
 
 /// Floats per rectangle in [`Engine::rects`]: 4 corners (x, y) then a flag bitmask.
 /// Flags: 1 = selected, 2 = hovered, 4 = creation preview.
@@ -117,8 +117,22 @@ impl Engine {
     }
 
     /// Pointer moved (client pixels). Returns `false` for non-finite input.
-    pub fn pointer_move(&mut self, client_x: f64, client_y: f64, shift: bool, alt: bool) -> bool {
-        self.session.pointer_move(client_x, client_y, shift, alt)
+    pub fn pointer_move(
+        &mut self,
+        client_x: f64,
+        client_y: f64,
+        shift: bool,
+        alt: bool,
+        snap_off: bool,
+    ) -> bool {
+        self.session
+            .pointer_move_snap(client_x, client_y, shift, alt, snap_off)
+    }
+
+    /// Snap guides as flat viewport segments `[x1, y1, x2, y2, …]` (empty when not snapping).
+    #[must_use]
+    pub fn guides(&self) -> Vec<f64> {
+        self.session.guides()
     }
 
     /// Pointer released (client pixels). Commits the gesture if it changed the document.
@@ -173,6 +187,29 @@ impl Engine {
     #[must_use]
     pub fn handles(&self) -> Vec<f64> {
         self.session.handles()
+    }
+
+    /// Rotation of the single selected object in degrees (−180…180), or 0.
+    #[must_use]
+    pub fn selection_rotation(&self) -> f64 {
+        self.session.selection_rotation()
+    }
+
+    /// Flips the selection about each object's center: `"h"` or `"v"`. Returns `false` when
+    /// nothing changed.
+    pub fn flip(&mut self, axis: &str) -> bool {
+        let axis = match axis {
+            "h" => Axis::Horizontal,
+            "v" => Axis::Vertical,
+            _ => return false,
+        };
+        self.session.flip(axis)
+    }
+
+    /// The cursor to show: a CSS cursor keyword for the action the next press would start.
+    #[must_use]
+    pub fn cursor(&self) -> String {
+        self.session.cursor().to_owned()
     }
 
     /// World box `[x, y, w, h]` of the single selected object, or empty.

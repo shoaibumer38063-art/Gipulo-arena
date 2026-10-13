@@ -2,7 +2,15 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 
 import type { EngineHandle, EngineView, ToolName } from '../engine/client';
 import { matchShortcut, type ShortcutAction } from './shortcuts';
-import { objectReadout, paintFrame, paintHandles, paintRects, sizeReadout, viewReadout } from './paint';
+import {
+  objectReadout,
+  paintFrame,
+  paintGuides,
+  paintHandles,
+  paintRects,
+  sizeReadout,
+  viewReadout,
+} from './paint';
 import './CanvasHost.css';
 
 /**
@@ -17,6 +25,9 @@ interface Snapshot {
   readonly rects: Float64Array;
   readonly handles: Float64Array;
   readonly bounds: Float64Array;
+  readonly cursor: string;
+  readonly rotation: number;
+  readonly guides: Float64Array;
   readonly stride: number;
   readonly objects: number;
   readonly selected: number;
@@ -31,6 +42,9 @@ function readSnapshot(engine: EngineHandle): Snapshot {
     rects: engine.rects(),
     handles: engine.handles(),
     bounds: engine.selectionBounds(),
+    cursor: engine.cursor(),
+    rotation: engine.selectionRotation(),
+    guides: engine.guides(),
     stride: engine.rectStride,
     objects: engine.objectCount(),
     selected: engine.selectionCount(),
@@ -117,6 +131,7 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       Number.parseFloat(styles.getPropertyValue('--handle-size')) || 8,
       { fill: styles.getPropertyValue('--frame-bg').trim(), accent },
     );
+    paintGuides(ctx, snap.guides, styles.getPropertyValue('--guide-snap').trim());
   }, [snap]);
 
   // Test and benchmark hook: `?fixture=<name>` opens `/fixtures/<name>.gip` (a committed golden
@@ -165,6 +180,8 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       'edit.undo': () => engine.undo(),
       'edit.redo': () => engine.redo(),
       'edit.cancel': () => engine.escape(),
+      'edit.flipH': () => engine.flip('h'),
+      'edit.flipV': () => engine.flip('v'),
     };
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -188,7 +205,14 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
   };
 
   const onPointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
-    engine.pointerMove(event.clientX, event.clientY, event.shiftKey, event.altKey);
+    // ⌘ (Meta) or Ctrl turns snapping off for the gesture (input-system §modifiers).
+    engine.pointerMove(
+      event.clientX,
+      event.clientY,
+      event.shiftKey,
+      event.altKey,
+      event.metaKey || event.ctrlKey,
+    );
     refresh();
   };
 
@@ -228,6 +252,8 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
         ref={canvasRef}
         className="canvas-host__surface"
         data-testid="editor-canvas"
+        style={{ cursor: snap.cursor }}
+        data-guides={snap.guides.length / 4}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={(event) => endPointer(event, false)}
@@ -242,6 +268,9 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       </output>
       <output className="canvas-host__size" data-testid="size-readout">
         {sizeReadout(snap.bounds)}
+      </output>
+      <output className="canvas-host__size" data-testid="rotation-readout">
+        {snap.selected === 1 ? `${Math.round(snap.rotation)}°` : ''}
       </output>
     </section>
   );

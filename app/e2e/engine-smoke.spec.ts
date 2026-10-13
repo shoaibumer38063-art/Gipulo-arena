@@ -12,6 +12,6 @@ test('shell loads the engine and completes the protocol handshake', async ({ pag
 
   const status = page.locator('[data-engine-status]');
   await expect(status).toHaveAttribute('data-engine-status', 'ready', { timeout: 20_000 });
-  await expect(status).toHaveText(/Engine ready · protocol 4/);
+  await expect(status).toHaveText(/Engine ready · protocol 6/);
   expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
 });
