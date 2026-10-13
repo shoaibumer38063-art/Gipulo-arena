@@ -12,7 +12,7 @@ import init, { Engine, protocol_version, rect_stride } from '../../../bindings/p
 
 /** Shell-side mirror of `PROTOCOL_VERSION` in core/crates/gip-session. Keep in sync — the
  * handshake exists precisely to catch drift (a mismatch is a clear error, never silence). */
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 
 /**
  * Verifies the core's reported protocol version against the shell's expectation.
@@ -65,6 +65,8 @@ export interface EngineHandle {
    * Empty when nothing is snapped (CAN-SNAP-7).
    */
   guides(): Float64Array;
+  /** The marquee rectangle `[x, y, w, h]` in viewport pixels; empty when none is being drawn. */
+  marquee(): Float64Array;
   /** Resize handles of the single resize target: 8 (x, y) points, NW, N, NE, E, SE, S, SW, W. */
   handles(): Float64Array;
   /** Rotation in degrees (−180…180) of the single selected object; 0 when there is none. */
@@ -132,6 +134,7 @@ function wrap(engine: Engine, protocolVersion: number): EngineHandle {
     pointerDown: (x, y, button, shift) => engine.pointer_down(x, y, button, shift),
     pointerMove: (x, y, shift, alt, snapOff) => engine.pointer_move(x, y, shift, alt, snapOff),
     guides: () => engine.guides(),
+    marquee: () => engine.marquee(),
     handles: () => engine.handles(),
     selectionBounds: () => engine.selection_bounds(),
     selectionRotation: () => engine.selection_rotation(),

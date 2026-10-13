@@ -145,6 +145,17 @@ export function paintGuides(ctx: CanvasRenderingContext2D, guides: Float64Array,
   }
 }
 
+/** The marquee rectangle while drag-selecting: a dashed outline in the accent color. */
+export function paintMarquee(ctx: CanvasRenderingContext2D, marquee: Float64Array, color: string): void {
+  if (marquee.length < 4) return;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(marquee[0] ?? 0, marquee[1] ?? 0, marquee[2] ?? 0, marquee[3] ?? 0);
+  ctx.restore();
+}
+
 export function paintHandles(
   ctx: CanvasRenderingContext2D,
   handles: Float64Array,

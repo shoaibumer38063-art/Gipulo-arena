@@ -7,6 +7,7 @@ import {
   paintFrame,
   paintGuides,
   paintHandles,
+  paintMarquee,
   paintRects,
   sizeReadout,
   viewReadout,
@@ -28,6 +29,7 @@ interface Snapshot {
   readonly cursor: string;
   readonly rotation: number;
   readonly guides: Float64Array;
+  readonly marquee: Float64Array;
   readonly stride: number;
   readonly objects: number;
   readonly selected: number;
@@ -45,6 +47,7 @@ function readSnapshot(engine: EngineHandle): Snapshot {
     cursor: engine.cursor(),
     rotation: engine.selectionRotation(),
     guides: engine.guides(),
+    marquee: engine.marquee(),
     stride: engine.rectStride,
     objects: engine.objectCount(),
     selected: engine.selectionCount(),
@@ -132,6 +135,7 @@ export function CanvasHost({ engine }: { readonly engine: EngineHandle }) {
       { fill: styles.getPropertyValue('--frame-bg').trim(), accent },
     );
     paintGuides(ctx, snap.guides, styles.getPropertyValue('--guide-snap').trim());
+    paintMarquee(ctx, snap.marquee, accent);
   }, [snap]);
 
   // Test and benchmark hook: `?fixture=<name>` opens `/fixtures/<name>.gip` (a committed golden

@@ -129,6 +129,12 @@ impl Engine {
             .pointer_move_snap(client_x, client_y, shift, alt, snap_off)
     }
 
+    /// The marquee rectangle `[x, y, w, h]` in viewport pixels, or empty when none is drawn.
+    #[must_use]
+    pub fn marquee(&self) -> Vec<f64> {
+        self.session.marquee()
+    }
+
     /// Snap guides as flat viewport segments `[x1, y1, x2, y2, …]` (empty when not snapping).
     #[must_use]
     pub fn guides(&self) -> Vec<f64> {

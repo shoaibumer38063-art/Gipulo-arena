@@ -357,6 +357,22 @@ impl Session {
         Some((c.x - t.w / 2.0, c.y - t.h / 2.0, t.w, t.h))
     }
 
+    /// The marquee rectangle in viewport pixels `[x, y, w, h]`, or empty when none is being drawn.
+    #[must_use]
+    pub fn marquee(&self) -> Vec<f64> {
+        let Preview::Marquee { x, y, w, h } = self.machine.preview() else {
+            return Vec::new();
+        };
+        let a = self.camera.world_to_viewport(Vec2::new(x, y));
+        let b = self.camera.world_to_viewport(Vec2::new(x + w, y + h));
+        vec![
+            a.x.min(b.x),
+            a.y.min(b.y),
+            (b.x - a.x).abs(),
+            (b.y - a.y).abs(),
+        ]
+    }
+
     /// Snap guides for the gesture in progress, as flat viewport segments `[x1, y1, x2, y2, …]`.
     #[must_use]
     pub fn guides(&self) -> Vec<f64> {
@@ -1577,5 +1593,92 @@ mod snap_tests {
         assert!(s.pointer_move(298.5, 160.0, false, false));
         assert!(s.pointer_up(298.5, 160.0));
         assert_eq!(s.selection_bounds(), Some((50.0, 50.0, 250.0, 110.0)));
+    }
+}
+
+#[cfg(test)]
+mod marquee_tests {
+    use super::*;
+
+    /// A: (200, 200) 120×60. B: (400, 300) 60×40. Select tool, nothing selected.
+    fn two() -> Session {
+        let mut s = Session::new();
+        assert!(s.set_viewport(0.0, 0.0, 800.0, 600.0));
+        assert!(s.set_tool(Tool::Rectangle));
+        assert!(s.pointer_down(200.0, 200.0, 0, false));
+        assert!(s.pointer_move(320.0, 260.0, false, false));
+        assert!(s.pointer_up(320.0, 260.0));
+        assert!(s.pointer_down(400.0, 300.0, 0, false));
+        assert!(s.pointer_move(460.0, 340.0, false, false));
+        assert!(s.pointer_up(460.0, 340.0));
+        assert!(s.set_tool(Tool::Select));
+        assert!(s.pointer_down(10.0, 500.0, 0, false));
+        assert!(s.pointer_up(10.0, 500.0)); // clear the create's selection
+        assert_eq!(s.selection_count(), 0);
+        s
+    }
+
+    fn marquee(s: &mut Session, from: (f64, f64), to: (f64, f64), shift: bool) {
+        assert!(s.pointer_down(from.0, from.1, 0, shift));
+        assert!(s.pointer_move(from.0 + 4.0, from.1 + 4.0, shift, false));
+        assert!(s.pointer_move(to.0, to.1, shift, false));
+        assert!(s.pointer_up(to.0, to.1));
+    }
+
+    #[test]
+    fn a_marquee_over_empty_canvas_selects_everything_it_touches() {
+        let mut s = two();
+        marquee(&mut s, (150.0, 150.0), (500.0, 380.0), false);
+        assert_eq!(s.selection_count(), 2);
+    }
+
+    #[test]
+    fn touching_an_edge_is_enough() {
+        let mut s = two();
+        // A's left edge is at x = 200; the marquee reaches x = 201.
+        marquee(&mut s, (100.0, 100.0), (201.0, 201.0), false);
+        assert_eq!(s.selection_count(), 1);
+        assert_eq!(s.selection_bounds(), Some((200.0, 200.0, 120.0, 60.0)));
+    }
+
+    #[test]
+    fn a_plain_marquee_replaces_the_previous_selection() {
+        let mut s = two();
+        marquee(&mut s, (150.0, 150.0), (330.0, 270.0), false); // selects A
+        assert_eq!(s.selection_bounds(), Some((200.0, 200.0, 120.0, 60.0)));
+        marquee(&mut s, (380.0, 280.0), (480.0, 360.0), false); // B only
+        assert_eq!(s.selection_count(), 1);
+        assert_eq!(s.selection_bounds(), Some((400.0, 300.0, 60.0, 40.0)));
+    }
+
+    #[test]
+    fn a_shift_marquee_adds_to_the_selection() {
+        let mut s = two();
+        marquee(&mut s, (150.0, 150.0), (330.0, 270.0), false); // A
+        marquee(&mut s, (380.0, 280.0), (480.0, 360.0), true); // add B
+        assert_eq!(s.selection_count(), 2);
+    }
+
+    #[test]
+    fn escape_during_a_marquee_restores_the_selection() {
+        let mut s = two();
+        marquee(&mut s, (150.0, 150.0), (330.0, 270.0), false); // A
+        assert!(s.pointer_down(380.0, 280.0, 0, false));
+        assert!(s.pointer_move(400.0, 300.0, false, false));
+        assert!(s.pointer_move(480.0, 360.0, false, false));
+        assert!(!s.marquee().is_empty(), "the marquee is drawn");
+        s.escape();
+        assert!(s.pointer_up(480.0, 360.0));
+        assert_eq!(s.selection_bounds(), Some((200.0, 200.0, 120.0, 60.0)));
+    }
+
+    #[test]
+    fn a_click_on_empty_canvas_clears_the_selection() {
+        let mut s = two();
+        marquee(&mut s, (150.0, 150.0), (330.0, 270.0), false);
+        assert_eq!(s.selection_count(), 1);
+        assert!(s.pointer_down(50.0, 50.0, 0, false));
+        assert!(s.pointer_up(50.0, 50.0));
+        assert_eq!(s.selection_count(), 0);
     }
 }

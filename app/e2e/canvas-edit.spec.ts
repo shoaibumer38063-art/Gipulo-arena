@@ -313,3 +313,35 @@ test.describe('snapping (Slice 4)', () => {
   });
 });
 
+test.describe('marquee selection (Slice 5)', () => {
+  /** A at canvas (200, 200) 120×60; B at (400, 300) 60×40. Nothing selected at the end. */
+  async function two(page: Page) {
+    await openReady(page);
+    await page.keyboard.press('r');
+    await drag(page, await at(page, 200, 200), await at(page, 320, 260));
+    await drag(page, await at(page, 400, 300), await at(page, 460, 340));
+    await page.keyboard.press('v');
+    await page.mouse.click((await at(page, 50, 50)).x, (await at(page, 50, 50)).y);
+    await expect(page.getByTestId('object-readout')).toHaveText('2 objects · 0 selected');
+  }
+
+  test('dragging a marquee over empty canvas selects every object it touches', async ({ page }) => {
+    await two(page);
+    await drag(page, await at(page, 150, 150), await at(page, 500, 380));
+    await expect(page.getByTestId('object-readout')).toHaveText('2 objects · 2 selected');
+  });
+
+  test('Escape during a marquee restores the previous selection', async ({ page }) => {
+    await two(page);
+    await drag(page, await at(page, 150, 150), await at(page, 330, 270)); // A only
+    await expect(page.getByTestId('object-readout')).toHaveText('2 objects · 1 selected');
+    const from = await at(page, 380, 280);
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move((await at(page, 480, 360)).x, (await at(page, 480, 360)).y, { steps: 4 });
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(page.getByTestId('object-readout')).toHaveText('2 objects · 1 selected');
+  });
+});
+

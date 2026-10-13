@@ -440,6 +440,17 @@ pub enum Preview {
         /// Height.
         h: f64,
     },
+    /// The marquee rectangle being dragged (world units, normalized).
+    Marquee {
+        /// Left.
+        x: f64,
+        /// Top.
+        y: f64,
+        /// Width.
+        w: f64,
+        /// Height.
+        h: f64,
+    },
     /// Nodes being dragged, at their previewed (not yet committed) positions.
     Moving {
         /// Previewed positions.
@@ -475,6 +486,19 @@ enum State {
         client: Vec2,
         world: Vec2,
         control: Option<(NodeId, Control)>,
+        /// Shift was held at press (additive selection).
+        shift: bool,
+        /// The press landed on empty canvas (no object under it).
+        empty_press: bool,
+    },
+    /// Drag-selecting: a rectangle selects every object it touches (task 026).
+    Marquee {
+        start_world: Vec2,
+        current_world: Vec2,
+        /// Selection when the marquee started (restored on Escape).
+        original: Vec<NodeId>,
+        /// Shift was held: the marquee adds to `original`.
+        shift: bool,
     },
     /// Dragging selected nodes.
     Moving {
@@ -612,6 +636,14 @@ impl Interaction {
     #[must_use]
     pub fn preview(&self) -> Preview {
         match &self.state {
+            State::Marquee {
+                start_world,
+                current_world,
+                ..
+            } => {
+                let (x, y, w, h) = normalized(*start_world, *current_world);
+                Preview::Marquee { x, y, w, h }
+            }
             State::Creating {
                 start_world,
                 current_world,
@@ -691,6 +723,8 @@ impl Interaction {
                     client,
                     world,
                     control: None,
+                    shift,
+                    empty_press: false,
                 };
             }
             Tool::Select => {
@@ -700,15 +734,23 @@ impl Interaction {
                         client,
                         world,
                         control: Some(control),
+                        shift,
+                        empty_press: false,
                     };
                     return Vec::new();
                 }
                 let hit = hit_test(doc, view, world);
-                self.apply_click_selection(hit, shift);
+                // Empty canvas: the selection is only changed once the drag becomes a marquee,
+                // or on release without a drag (see pointer_up).
+                if hit.is_some() {
+                    self.apply_click_selection(hit, shift);
+                }
                 self.state = State::Pressed {
                     client,
                     world,
                     control: None,
+                    shift,
+                    empty_press: hit.is_none(),
                 };
             }
         }
@@ -738,6 +780,8 @@ impl Interaction {
                 client: press_client,
                 world: press_world,
                 control,
+                shift: press_shift,
+                empty_press,
             } => {
                 if client.distance_sq(press_client).sqrt() < DRAG_THRESHOLD_PX {
                     return Vec::new();
@@ -758,10 +802,24 @@ impl Interaction {
                         self.cursor = "crosshair";
                     }
                     Tool::Select => {
-                        // Dragging starts only from a press on a selected node. Marquee
-                        // selection is out of scope.
+                        // A drag from a selected node moves the selection. A drag from empty
+                        // canvas is a marquee. A drag from any other object does nothing.
                         let items = self.selected_positions(doc);
-                        if items.is_empty() || !self.pressed_on_selection(doc, view, press_world) {
+                        if empty_press {
+                            let original = self.selection.clone();
+                            if !press_shift {
+                                self.selection.clear();
+                            }
+                            self.state = State::Marquee {
+                                start_world: press_world,
+                                current_world: world,
+                                original,
+                                shift: press_shift,
+                            };
+                            self.update_marquee(doc, world);
+                        } else if items.is_empty()
+                            || !self.pressed_on_selection(doc, view, press_world)
+                        {
                             self.state = State::Idle;
                         } else {
                             self.state = State::Moving {
@@ -793,6 +851,10 @@ impl Interaction {
                 let world =
                     self.snapped_control_world(doc, view.camera.zoom, to_world(view, client), mods);
                 self.update_control(world, mods);
+                Vec::new()
+            }
+            State::Marquee { .. } => {
+                self.update_marquee(doc, to_world(view, client));
                 Vec::new()
             }
             State::Creating { start_world, .. } => {
@@ -894,6 +956,16 @@ impl Interaction {
                     Vec::new()
                 }
             }
+            State::Pressed {
+                control: None,
+                shift: false,
+                empty_press: true,
+                ..
+            } if self.tool == Tool::Select => {
+                // A click on empty canvas (no drag) clears the selection.
+                self.selection.clear();
+                Vec::new()
+            }
             _ => Vec::new(),
         }
     }
@@ -901,6 +973,9 @@ impl Interaction {
     /// Cancels the gesture in progress without a history entry (CAN-MODE-4).
     pub fn cancel(&mut self) {
         self.clear_snap();
+        if let State::Marquee { original, .. } = &self.state {
+            self.selection = original.clone();
+        }
         self.state = State::Idle;
         self.cursor = tool_cursor(self.tool);
     }
@@ -948,6 +1023,29 @@ impl Interaction {
         } else {
             vec![Effect::Commit(Commit::Transform { items })]
         }
+    }
+
+    /// Moves the marquee corner and recomputes the selection from the touched objects.
+    fn update_marquee(&mut self, doc: &Document, world: Vec2) {
+        let State::Marquee {
+            start_world,
+            current_world,
+            original,
+            shift,
+        } = &mut self.state
+        else {
+            return;
+        };
+        *current_world = world;
+        let (x, y, w, h) = normalized(*start_world, world);
+        let hits = marquee_hits(doc, (x, y, w, h));
+        let mut next: Vec<NodeId> = if *shift { original.clone() } else { Vec::new() };
+        for id in hits {
+            if !next.contains(&id) {
+                next.push(id);
+            }
+        }
+        self.selection = next;
     }
 
     fn apply_click_selection(&mut self, hit: Option<NodeId>, shift: bool) {
@@ -1398,6 +1496,29 @@ fn normalized(a: Vec2, b: Vec2) -> (f64, f64, f64, f64) {
     let x = a.x.min(b.x);
     let y = a.y.min(b.y);
     (x, y, (a.x - b.x).abs(), (a.y - b.y).abs())
+}
+
+/// Visible, unlocked nodes on the page whose world box touches `rect` (task 026, touch selects).
+#[must_use]
+pub fn marquee_hits(doc: &Document, rect: Rect4) -> Vec<NodeId> {
+    let Some(page) = doc.pages().first() else {
+        return Vec::new();
+    };
+    let (rx, ry, rw, rh) = rect;
+    page.children
+        .iter()
+        .filter(|id| {
+            let Some(node) = doc.nodes().get(id) else {
+                return false;
+            };
+            if !node.visible || node.locked {
+                return false;
+            }
+            let (x, y, w, h) = transform_box(&node.transform);
+            x <= rx + rw && rx <= x + w && y <= ry + rh && ry <= y + h
+        })
+        .copied()
+        .collect()
 }
 
 /// Topmost visible, unlocked node whose rectangle contains `world` (CAN-SEL-1, CAN-SEL-2).
